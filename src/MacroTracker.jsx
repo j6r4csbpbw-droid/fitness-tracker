@@ -424,7 +424,7 @@ function SummaryCard({ totals, target, onReset, onEdit, onClearAll }) {
 
 export default function MacroTracker() {
   const getTodayString = () => new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
-  const getTodayKey = () => new Date().toISOString().split('T')[0];
+  const getTodayKey = () => new Date().toLocaleDateString("en-CA");
 
   // Detect new day on startup: reset session if date has changed, then stamp current_date.
   const [stored] = useState(() => {
