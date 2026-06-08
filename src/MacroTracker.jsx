@@ -1,14 +1,15 @@
 import { useState, useMemo, useEffect } from "react";
 
 const STORAGE_KEY = "macroTracker";
-const todayKey = () => new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
+const getTodayKey = () => new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
+const getTodayString = () => new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
 
 function loadStorage() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const data = JSON.parse(raw);
-    if (data.date !== todayKey()) return null; // stale — different day
+    if (data.date !== getTodayKey()) return null; // stale — different day
     return data;
   } catch {
     return null;
@@ -423,9 +424,6 @@ function SummaryCard({ totals, target, onReset, onEdit, onClearAll }) {
 }
 
 export default function MacroTracker() {
-  const getTodayString = () => new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
-  const getTodayKey = () => new Date().toLocaleDateString("en-CA");
-
   // Detect new day on startup: reset session if date has changed, then stamp current_date.
   const [stored] = useState(() => {
     const savedDate = localStorage.getItem("current_date");
