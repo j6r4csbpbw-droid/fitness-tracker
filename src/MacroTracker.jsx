@@ -526,7 +526,14 @@ export default function MacroTracker() {
               display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
             <span style={{ fontSize: 20, lineHeight: 1 }}>+</span> Add Food
           </button>
-          <button onClick={() => setSubmitted(true)} disabled={log.length === 0}
+          <button onClick={() => {
+              const score = [totals.cal, totals.p, totals.c, totals.f]
+                .filter((v, i) => Math.abs(v / [target.cal, target.p, target.c, target.f][i] - 1) <= 0.05).length;
+              localStorage.setItem(`day_${todayKey()}`, JSON.stringify({
+                date: todayKey(), isGym, targets: target, totals, score,
+              }));
+              setSubmitted(true);
+            }} disabled={log.length === 0}
             style={{ flex: 1, background: log.length === 0 ? "#e5e5e5" : "#22c55e", color: log.length === 0 ? "#aaa" : "#fff",
               border: "none", borderRadius: 12, padding: "14px", fontSize: 14, fontWeight: 700,
               cursor: log.length === 0 ? "default" : "pointer",
