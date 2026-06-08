@@ -423,27 +423,29 @@ function SummaryCard({ totals, target, onReset, onEdit, onClearAll }) {
 }
 
 export default function MacroTracker() {
-  // Runs first: detect date rollover, clear stale session, stamp current_date.
-  const [currentDate, setCurrentDate] = useState(() => {
-    const now = new Date();
-    const todayStr = now.toLocaleDateString("en-CA");
+  const getTodayString = () => new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+  const getTodayKey = () => new Date().toISOString().split('T')[0];
+
+  // Detect new day on startup: reset session if date has changed, then stamp current_date.
+  const [stored] = useState(() => {
     const savedDate = localStorage.getItem("current_date");
-    if (savedDate && savedDate !== todayStr) {
+    const todayKey = getTodayKey();
+    if (savedDate && savedDate !== todayKey) {
       localStorage.removeItem(STORAGE_KEY);
     }
-    localStorage.setItem("current_date", todayStr);
-    return now;
+    localStorage.setItem("current_date", todayKey);
+    return loadStorage();
   });
 
-  const [stored] = useState(loadStorage);
   const [isGym, setIsGym] = useState(stored?.isGym ?? true);
   const [log, setLog] = useState(stored?.log ?? []);
   const [showModal, setShowModal] = useState(false);
   const [submitted, setSubmitted] = useState(stored?.submitted ?? false);
+  const [dateDisplay, setDateDisplay] = useState(getTodayString());
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ date: currentDate.toISOString().split('T')[0], log, isGym, submitted }));
-  }, [log, isGym, submitted, currentDate]);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ date: getTodayKey(), log, isGym, submitted }));
+  }, [log, isGym, submitted]);
 
   const target = TARGETS[isGym ? "gym" : "rest"];
   const totals = {
@@ -452,7 +454,6 @@ export default function MacroTracker() {
     c:   log.reduce((a, e) => a + e.macros.c, 0),
     f:   log.reduce((a, e) => a + e.macros.f, 0),
   };
-  const today = currentDate.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
 
   return (
     <div style={{ fontFamily: "system-ui, sans-serif", background: "#f8f8f8", minHeight: "100vh", paddingBottom: 90 }}>
@@ -461,7 +462,7 @@ export default function MacroTracker() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
           <div>
             <div style={{ fontSize: 11, color: "#666", fontWeight: 600, letterSpacing: 1 }}>MACRO TRACKER</div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginTop: 2 }}>{today}</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginTop: 2 }}>{dateDisplay}</div>
           </div>
           <div style={{ display: "flex", background: "rgba(255,255,255,0.12)", borderRadius: 20, padding: 3, gap: 2 }}>
             {[["gym","🏋️ Gym"],["rest","🛋️ Rest"]].map(([key, label]) => {
@@ -528,8 +529,8 @@ export default function MacroTracker() {
           totals={totals}
           target={target}
           onEdit={() => setSubmitted(false)}
-          onClearAll={() => { clearStorage(); localStorage.removeItem(`day_${currentDate.toLocaleDateString("en-CA")}`); setSubmitted(false); setLog([]); }}
-          onReset={() => { clearStorage(); setSubmitted(false); setLog([]); setCurrentDate(new Date()); }}
+          onClearAll={() => { clearStorage(); localStorage.removeItem(`day_${getTodayKey()}`); setSubmitted(false); setLog([]); }}
+          onReset={() => { clearStorage(); setSubmitted(false); setLog([]); setDateDisplay(getTodayString()); }}
         />
       )}
 
@@ -542,7 +543,7 @@ export default function MacroTracker() {
             <span style={{ fontSize: 20, lineHeight: 1 }}>+</span> Add Food
           </button>
           <button onClick={() => {
-              const dateKey = currentDate.toLocaleDateString("en-CA");
+              const dateKey = getTodayKey();
               const score = [totals.cal, totals.p, totals.c, totals.f]
                 .filter((v, i) => Math.abs(v / [target.cal, target.p, target.c, target.f][i] - 1) <= 0.05).length;
               localStorage.setItem(`day_${dateKey}`, JSON.stringify({
