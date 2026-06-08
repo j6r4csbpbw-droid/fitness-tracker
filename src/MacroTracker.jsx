@@ -193,9 +193,9 @@ function StackBar({ totals, target }) {
           <span style={{ fontWeight: 800, fontSize: 26, color: totals.cal === 0 ? "#555" : barColor, lineHeight: 1 }}>
             {Math.round(totals.cal)}
           </span>
-          <span style={{ fontSize: 12, color: "#666", marginLeft: 4 }}>/ {target.cal} kcal</span>
+          <span style={{ fontSize: 12, color: "#93c5fd", marginLeft: 4 }}>/ {target.cal} kcal</span>
         </div>
-        <span style={{ color: barColor, fontWeight: 600, fontSize: 12 }}>
+        <span style={{ color: totals.cal === 0 ? "#93c5fd" : barColor, fontWeight: 600, fontSize: 12 }}>
           {totals.cal === 0 ? `${target.cal} remaining` :
            calStatus === "hit" ? "✓ On target" :
            calStatus === "over" ? `+${Math.round(totals.cal - target.cal)} over` :
@@ -208,16 +208,13 @@ function StackBar({ totals, target }) {
         <div style={{ position: "absolute", left: `${pPct+cPct}%`, top: 0, height: "100%", width: `${fPct}%`, background: C.f }} />
         <div style={{ position: "absolute", left: `${Math.min((1/(1+TIGHT))*100,100)}%`, top: 0, height: "100%", width: 2, background: "rgba(255,255,255,0.4)" }} />
       </div>
-      <div style={{ display: "flex", gap: 12, marginTop: 6, fontSize: 11 }}>
-        {[["#3b82f6","P",totals.p,target.p],["#f59e0b","C",totals.c,target.c],["#10b981","F",totals.f,target.f]].map(([col,l,val,tgt]) => (
-          <div key={l} style={{ display: "flex", alignItems: "center", gap: 3 }}>
-            <div style={{ width: 8, height: 8, borderRadius: 2, background: col }} />
-            <span style={{ color: "rgba(255,255,255,0.5)" }}>{l}</span>
-            <span style={{ color: "rgba(255,255,255,0.75)", fontWeight: 600 }}>{Math.round(val)}</span>
-            <span style={{ color: "rgba(255,255,255,0.3)" }}>/ {tgt}g</span>
-          </div>
+      <div style={{ display: "flex", gap: 8, marginTop: 8, alignItems: "center" }}>
+        {[["P", totals.p, target.p], ["C", totals.c, target.c], ["F", totals.f, target.f]].map(([l, val, tgt]) => (
+          <span key={l} style={{ background: "rgba(255,255,255,0.15)", color: "#fff", padding: "4px 11px", borderRadius: 20, fontSize: 12, fontWeight: 600 }}>
+            {l} {Math.round(val)}<span style={{ fontWeight: 400, opacity: 0.6 }}>/{tgt}g</span>
+          </span>
         ))}
-        <span style={{ marginLeft: "auto", color: "rgba(255,255,255,0.35)" }}>{Math.round(used)}%</span>
+        <span style={{ marginLeft: "auto", color: "rgba(255,255,255,0.35)", fontSize: 11 }}>{Math.round(used)}%</span>
       </div>
     </div>
   );
@@ -438,13 +435,13 @@ export default function MacroTracker() {
   return (
     <div style={{ fontFamily: "system-ui, sans-serif", background: "#f8f8f8", minHeight: "100vh", paddingBottom: 90 }}>
 
-      <div style={{ background: "#1a1a1a", padding: "20px 16px 24px" }}>
+      <div style={{ background: "#1e3a5f", padding: "20px 16px 24px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
           <div>
             <div style={{ fontSize: 11, color: "#666", fontWeight: 600, letterSpacing: 1 }}>MACRO TRACKER</div>
             <div style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginTop: 2 }}>{today}</div>
           </div>
-          <div style={{ display: "flex", background: "#2a2a2a", borderRadius: 20, padding: 3, gap: 2 }}>
+          <div style={{ display: "flex", background: "#1e40af", borderRadius: 20, padding: 3, gap: 2 }}>
             {[["gym","🏋️ Gym"],["rest","🛋️ Rest"]].map(([key, label]) => (
               <button key={key} onClick={() => setIsGym(key === "gym")}
                 style={{ padding: "5px 12px", borderRadius: 16, border: "none", cursor: "pointer", fontSize: 11, fontWeight: 600,
