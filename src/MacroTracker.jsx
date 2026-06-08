@@ -1,15 +1,24 @@
 import { useState, useMemo, useEffect } from "react";
 
 const STORAGE_KEY = "macroTracker";
-const getTodayKey = () => new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
-const getTodayString = () => new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
 
-function loadStorage() {
+// Format a Date object → "YYYY-MM-DD" (used as localStorage key)
+const formatDateKey = (date) => date.toLocaleDateString("en-CA");
+// Format a Date object → "Mon 9 Jun" style (used in header)
+const formatDateDisplay = (date) => date.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+// Advance any Date by exactly one calendar day (handles month/year rollover via JS Date)
+function advanceDay(date) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + 1);
+  return next;
+}
+
+function loadStorage(dateKey) {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const data = JSON.parse(raw);
-    if (data.date !== getTodayKey()) return null; // stale — different day
+    if (data.date !== dateKey) return null; // stale
     return data;
   } catch {
     return null;
@@ -424,26 +433,43 @@ function SummaryCard({ totals, target, onReset, onEdit, onClearAll }) {
 }
 
 export default function MacroTracker() {
-  // Detect new day on startup: reset session if date has changed, then stamp current_date.
-  const [stored] = useState(() => {
-    const savedDate = localStorage.getItem("current_date");
-    const todayKey = getTodayKey();
-    if (savedDate && savedDate !== todayKey) {
+  // workingDate: starts as actual today, or restores an already-advanced date from localStorage.
+  // On "New Day" it advances by one calendar day. All saving/display uses this date.
+  const [workingDate, setWorkingDate] = useState(() => {
+    const actualToday = new Date();
+    const actualTodayKey = formatDateKey(actualToday);
+    const savedKey = localStorage.getItem("working_date");
+
+    if (savedKey && savedKey >= actualTodayKey) {
+      // User already advanced the date (or it's today) — restore it
+      const [y, m, d] = savedKey.split("-").map(Number);
+      return new Date(y, m - 1, d);
+    }
+    // Stored date is in the past (calendar rolled over while app was closed) — reset session
+    if (savedKey && savedKey < actualTodayKey) {
       localStorage.removeItem(STORAGE_KEY);
     }
-    localStorage.setItem("current_date", todayKey);
-    return loadStorage();
+    localStorage.setItem("working_date", actualTodayKey);
+    return actualToday;
   });
+
+  // Load session that matches the working date (null if none or stale)
+  const [stored] = useState(() => loadStorage(formatDateKey(workingDate)));
 
   const [isGym, setIsGym] = useState(stored?.isGym ?? true);
   const [log, setLog] = useState(stored?.log ?? []);
   const [showModal, setShowModal] = useState(false);
   const [submitted, setSubmitted] = useState(stored?.submitted ?? false);
-  const [dateDisplay, setDateDisplay] = useState(getTodayString());
 
+  // Keep working_date in localStorage in sync whenever it changes
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ date: getTodayKey(), log, isGym, submitted }));
-  }, [log, isGym, submitted]);
+    localStorage.setItem("working_date", formatDateKey(workingDate));
+  }, [workingDate]);
+
+  // Persist session state to localStorage
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ date: formatDateKey(workingDate), log, isGym, submitted }));
+  }, [log, isGym, submitted, workingDate]);
 
   const target = TARGETS[isGym ? "gym" : "rest"];
   const totals = {
@@ -460,7 +486,7 @@ export default function MacroTracker() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
           <div>
             <div style={{ fontSize: 11, color: "#666", fontWeight: 600, letterSpacing: 1 }}>MACRO TRACKER</div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginTop: 2 }}>{dateDisplay}</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginTop: 2 }}>{formatDateDisplay(workingDate)}</div>
           </div>
           <div style={{ display: "flex", background: "rgba(255,255,255,0.12)", borderRadius: 20, padding: 3, gap: 2 }}>
             {[["gym","🏋️ Gym"],["rest","🛋️ Rest"]].map(([key, label]) => {
@@ -527,8 +553,8 @@ export default function MacroTracker() {
           totals={totals}
           target={target}
           onEdit={() => setSubmitted(false)}
-          onClearAll={() => { clearStorage(); localStorage.removeItem(`day_${getTodayKey()}`); setSubmitted(false); setLog([]); }}
-          onReset={() => { clearStorage(); setSubmitted(false); setLog([]); setDateDisplay(getTodayString()); }}
+          onClearAll={() => { clearStorage(); localStorage.removeItem(`day_${formatDateKey(workingDate)}`); setSubmitted(false); setLog([]); }}
+          onReset={() => { clearStorage(); setSubmitted(false); setLog([]); setWorkingDate(prev => advanceDay(prev)); }}
         />
       )}
 
@@ -541,7 +567,7 @@ export default function MacroTracker() {
             <span style={{ fontSize: 20, lineHeight: 1 }}>+</span> Add Food
           </button>
           <button onClick={() => {
-              const dateKey = getTodayKey();
+              const dateKey = formatDateKey(workingDate);
               const score = [totals.cal, totals.p, totals.c, totals.f]
                 .filter((v, i) => Math.abs(v / [target.cal, target.p, target.c, target.f][i] - 1) <= 0.05).length;
               localStorage.setItem(`day_${dateKey}`, JSON.stringify({
