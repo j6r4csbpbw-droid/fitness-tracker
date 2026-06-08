@@ -466,6 +466,24 @@ export default function MacroTracker() {
     localStorage.setItem("working_date", formatDateKey(workingDate));
   }, [workingDate]);
 
+  // Sync tracker state when History tab deletes or edits a day matching the current working date
+  useEffect(() => {
+    function handleTrackerSync(e) {
+      const { type, dateStr, updated } = e.detail;
+      if (dateStr !== formatDateKey(workingDate)) return;
+      if (type === "delete") {
+        clearStorage();
+        setLog([]);
+        setSubmitted(false);
+      } else if (type === "edit") {
+        setLog(updated.entries || []);
+        setSubmitted(true);
+      }
+    }
+    window.addEventListener("tracker-sync", handleTrackerSync);
+    return () => window.removeEventListener("tracker-sync", handleTrackerSync);
+  }, [workingDate]);
+
   // Persist session state to localStorage
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ date: formatDateKey(workingDate), log, isGym, submitted }));

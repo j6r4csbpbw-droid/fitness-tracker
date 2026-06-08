@@ -250,10 +250,12 @@ function ThisMonthTab() {
   function handleDelete(dateStr) {
     localStorage.removeItem(`day_${dateStr}`);
     setDayMap(prev => { const next = { ...prev }; delete next[dateStr]; return next; });
+    window.dispatchEvent(new CustomEvent("tracker-sync", { detail: { type: "delete", dateStr } }));
   }
 
   function handleSave(dateStr, updated) {
     setDayMap(prev => ({ ...prev, [dateStr]: updated }));
+    window.dispatchEvent(new CustomEvent("tracker-sync", { detail: { type: "edit", dateStr, updated } }));
   }
 
   return (
