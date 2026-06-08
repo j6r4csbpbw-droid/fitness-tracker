@@ -190,12 +190,12 @@ function StackBar({ totals, target }) {
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
         <div>
-          <span style={{ fontWeight: 800, fontSize: 26, color: totals.cal === 0 ? "#555" : barColor, lineHeight: 1 }}>
+          <span style={{ fontWeight: 800, fontSize: 26, color: "#22c55e", lineHeight: 1 }}>
             {Math.round(totals.cal)}
           </span>
-          <span style={{ fontSize: 12, color: "#93c5fd", marginLeft: 4 }}>/ {target.cal} kcal</span>
+          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginLeft: 4 }}>/ {target.cal} kcal</span>
         </div>
-        <span style={{ color: totals.cal === 0 ? "#93c5fd" : barColor, fontWeight: 600, fontSize: 12 }}>
+        <span style={{ color: "#22c55e", fontWeight: 600, fontSize: 12 }}>
           {totals.cal === 0 ? `${target.cal} remaining` :
            calStatus === "hit" ? "✓ On target" :
            calStatus === "over" ? `+${Math.round(totals.cal - target.cal)} over` :
@@ -448,15 +448,18 @@ export default function MacroTracker() {
             <div style={{ fontSize: 11, color: "#666", fontWeight: 600, letterSpacing: 1 }}>MACRO TRACKER</div>
             <div style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginTop: 2 }}>{today}</div>
           </div>
-          <div style={{ display: "flex", background: "#1e40af", borderRadius: 20, padding: 3, gap: 2 }}>
-            {[["gym","🏋️ Gym"],["rest","🛋️ Rest"]].map(([key, label]) => (
+          <div style={{ display: "flex", background: "rgba(255,255,255,0.12)", borderRadius: 20, padding: 3, gap: 2 }}>
+            {[["gym","🏋️ Gym"],["rest","🛋️ Rest"]].map(([key, label]) => {
+              const active = (isGym ? "gym" : "rest") === key;
+              return (
               <button key={key} onClick={() => setIsGym(key === "gym")}
                 style={{ padding: "5px 12px", borderRadius: 16, border: "none", cursor: "pointer", fontSize: 11, fontWeight: 600,
-                  background: (isGym ? "gym" : "rest") === key ? "#fff" : "transparent",
-                  color: (isGym ? "gym" : "rest") === key ? "#1a1a1a" : "#888" }}>
+                  background: active ? "#fbbf24" : "transparent",
+                  color: active ? "#1a1a1a" : "rgba(255,255,255,0.6)" }}>
                 {label}
               </button>
-            ))}
+              );
+            })}
           </div>
         </div>
         <StackBar totals={totals} target={target} />
