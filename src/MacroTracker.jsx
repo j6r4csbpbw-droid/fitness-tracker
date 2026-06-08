@@ -66,6 +66,7 @@ const FOODS = [
   { cat: "Grains", name: "Pasta — wholemeal", cal: 348, p: 14, c: 68, f: 2.5, unit: "g" },
   { cat: "Grains", name: "Quinoa (per 60g dry)", cal: 221, p: 8, c: 38, f: 3.5, unit: "serving", servingG: 60 },
   { cat: "Grains", name: "Rice cake (per cake)", cal: 35, p: 0.7, c: 7.3, f: 0.3, unit: "serving", servingG: 9 },
+  { cat: "Grains", name: "Bran flakes — M&S", cal: 359, p: 12, c: 64, f: 2.5, unit: "g" },
   { cat: "Grains", name: "White rice", cal: 365, p: 7, c: 80, f: 0.7, unit: "g" },
   { cat: "Grains", name: "Whey protein (per 25g scoop)", cal: 95, p: 20, c: 2, f: 1.5, unit: "serving", servingG: 25 },
   { cat: "Grains", name: "Tortilla wrap — medium", cal: 138, p: 3.5, c: 24, f: 3, unit: "serving", servingG: 45 },
