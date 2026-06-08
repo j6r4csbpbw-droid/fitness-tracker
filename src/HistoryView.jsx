@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { AddModal } from "./MacroTracker.jsx";
 
 const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const SHORT_MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -6,36 +7,32 @@ const DAY_ABBR = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 
 const TIGHT = 0.05;
 const LOOSE = 0.10;
+const GYM_TARGETS  = { cal: 2850, p: 180, c: 340, f: 94 };
+const REST_TARGETS = { cal: 2550, p: 180, c: 255, f: 85 };
+const MC = { p: "#3b82f6", c: "#b45309", f: "#059669" };
 
 function statusColor(val, tgt) {
+  if (!tgt) return "#22c55e";
   const dev = Math.abs(val / tgt - 1);
   if (dev <= TIGHT) return "#22c55e";
   if (dev <= LOOSE) return "#f59e0b";
   return "#ef4444";
 }
 
-function statusBg(col) {
-  if (col === "#22c55e") return "#f0fdf4";
-  if (col === "#f59e0b") return "#fffbeb";
-  return "#fef2f2";
-}
-
-function daysInMonth(year, month) {
+function daysInMonthCount(year, month) {
   return new Date(year, month + 1, 0).getDate();
 }
 
-function readDayKeys(year, month) {
+function loadDayMap(year, month) {
   const prefix = `day_${year}-${String(month + 1).padStart(2, "0")}`;
-  const keys = [];
+  const map = {};
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i);
-    if (k && k.startsWith(prefix)) keys.push(k.slice(4));
+    if (k && k.startsWith(prefix)) {
+      try { map[k.slice(4)] = JSON.parse(localStorage.getItem(k)); } catch { /* skip */ }
+    }
   }
-  return keys.sort((a, b) => b.localeCompare(a));
-}
-
-function readDay(dateStr) {
-  try { return JSON.parse(localStorage.getItem(`day_${dateStr}`)); } catch { return null; }
+  return map;
 }
 
 function readMonthKeys() {
@@ -57,126 +54,206 @@ function fmtDate(dateStr) {
   return `${DAY_ABBR[dow]} ${d} ${SHORT_MONTHS[m - 1]}`;
 }
 
-function DayDetail({ dateStr, onBack }) {
-  const data = readDay(dateStr);
-  if (!data) return (
-    <div style={{ padding: 32, textAlign: "center", color: "#ccc", fontSize: 13 }}>No data found.</div>
-  );
-  const { targets, totals, score, isGym } = data;
-  const ITEMS = [
-    { label: "Calories", val: Math.round(totals.cal), tgt: targets.cal, unit: "kcal" },
-    { label: "Protein",  val: Math.round(totals.p),   tgt: targets.p,   unit: "g"    },
-    { label: "Carbs",    val: Math.round(totals.c),   tgt: targets.c,   unit: "g"    },
-    { label: "Fat",      val: Math.round(totals.f),   tgt: targets.f,   unit: "g"    },
-  ];
+function PencilIcon() {
   return (
-    <div>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 16px", background: "#fff", borderBottom: "1px solid #f0f0f0" }}>
-        <button onClick={onBack}
-          style={{ border: "none", background: "none", cursor: "pointer", fontSize: 22, color: "#1a1a1a", padding: "0 6px 0 0", lineHeight: 1 }}>
-          ‹
-        </button>
-        <span style={{ fontSize: 15, fontWeight: 700, color: "#1a1a1a" }}>{fmtDate(dateStr)}</span>
-        <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20,
-          background: isGym ? "#dbeafe" : "#f3f4f6", color: isGym ? "#1d4ed8" : "#6b7280" }}>
-          {isGym ? "Gym" : "Rest"}
-        </span>
-      </div>
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#93c5fd" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+    </svg>
+  );
+}
 
-      <div style={{ background: "#fafaf9", borderBottom: "0.5px solid #e5e5e5", padding: "16px 16px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div>
-          <div style={{ fontSize: 11, color: "#9a9a9a", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" }}>Day Summary</div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: "#1a1a1a", marginTop: 2 }}>
-            {score === 4 ? "🎯 Perfect day" : score >= 3 ? "💪 Strong day" : score >= 2 ? "📊 Decent day" : "📉 Off today"}
-          </div>
-        </div>
-        <div style={{ textAlign: "right" }}>
-          <div style={{ fontSize: 32, fontWeight: 900, color: "#1a1a1a", lineHeight: 1 }}>
-            {score}<span style={{ fontSize: 16, color: "#aaa" }}>/4</span>
-          </div>
-          <div style={{ fontSize: 11, color: "#aaa" }}>targets hit</div>
-        </div>
-      </div>
+function TrashIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="3 6 5 6 21 6"/>
+      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+      <path d="M10 11v6M14 11v6"/>
+      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+    </svg>
+  );
+}
 
-      <div style={{ background: "#fff", border: "1px solid #f0f0f0", borderTop: "none" }}>
-        {ITEMS.map(({ label, val, tgt, unit }, i) => {
-          const col = statusColor(val, tgt);
-          const pct = Math.min((val / tgt) * 100, 100);
-          const diff = val - tgt;
-          return (
-            <div key={label} style={{ padding: "12px 16px", borderBottom: i < ITEMS.length - 1 ? "1px solid #f5f5f5" : "none" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: "#333" }}>{label}</span>
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "#111" }}>{val}{unit}</span>
-                  <span style={{ fontSize: 11, color: "#bbb" }}>/ {tgt}{unit}</span>
-                  <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 7px", borderRadius: 20,
-                    background: statusBg(col), color: col }}>
-                    {Math.abs(diff / tgt) <= TIGHT ? "✓ Hit" : `${diff > 0 ? "+" : ""}${Math.round(diff)}${unit}`}
-                  </span>
-                </div>
-              </div>
-              <div style={{ background: "#f3f4f6", borderRadius: 4, height: 7, overflow: "hidden" }}>
-                <div style={{ width: `${pct}%`, height: "100%", background: col, borderRadius: 4 }} />
-              </div>
-            </div>
-          );
-        })}
+function TargetBlock({ label, targets, borderBottom }) {
+  return (
+    <div style={{ background: "#e8edf5", borderBottom, padding: "8px 12px 7px" }}>
+      <div style={{ fontSize: 10, fontWeight: 700, color: "#4a6fa5", letterSpacing: 0.8, marginBottom: 3, textTransform: "uppercase" }}>
+        {label}
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: "#1e3a5f" }}>{targets.cal} kcal</span>
+        <span style={{ fontSize: 12, fontWeight: 600, color: MC.p }}>P {targets.p}g</span>
+        <span style={{ fontSize: 12, fontWeight: 600, color: MC.c }}>C {targets.c}g</span>
+        <span style={{ fontSize: 12, fontWeight: 600, color: MC.f }}>F {targets.f}g</span>
       </div>
     </div>
   );
 }
 
-function DayRow({ dateStr, data, onClick }) {
-  if (!data) return null;
+function DayRow({ dateStr, data, onEdit, onDelete }) {
   const { isGym, targets, totals } = data;
-  const calCol = statusColor(Math.round(totals.cal), targets.cal);
+  const calColor = statusColor(Math.round(totals.cal), targets.cal);
   return (
-    <div onClick={onClick}
-      style={{ padding: "12px 16px", background: "#fff", borderBottom: "1px solid #f5f5f5", cursor: "pointer", display: "flex", alignItems: "center", gap: 10 }}>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>{fmtDate(dateStr)}</span>
+    <div style={{ padding: "8px 12px", background: "#fff", borderBottom: "0.5px solid #f0f0f0" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a" }}>{fmtDate(dateStr)}</span>
           <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 20,
             background: isGym ? "#dbeafe" : "#f3f4f6", color: isGym ? "#1d4ed8" : "#6b7280" }}>
             {isGym ? "Gym" : "Rest"}
           </span>
         </div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-          <span style={{ fontSize: 11, fontWeight: 700, color: calCol }}>
-            {Math.round(totals.cal)}/{targets.cal} kcal
-          </span>
-          {[["P", totals.p, targets.p], ["C", totals.c, targets.c], ["F", totals.f, targets.f]].map(([l, v, t]) => (
-            <span key={l} style={{ fontSize: 11, color: "#888" }}>
-              {l} {Math.round(v)}/{t}g
-            </span>
-          ))}
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <button onClick={onEdit}
+            style={{ border: "none", background: "none", cursor: "pointer", padding: "4px 6px", display: "flex", alignItems: "center" }}>
+            <PencilIcon />
+          </button>
+          <button onClick={onDelete}
+            style={{ border: "none", background: "none", cursor: "pointer", padding: "4px 6px", display: "flex", alignItems: "center" }}>
+            <TrashIcon />
+          </button>
         </div>
       </div>
-      <span style={{ fontSize: 18, color: "#ccc", flexShrink: 0 }}>›</span>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        <span style={{ fontSize: 12, fontWeight: 600, color: calColor }}>
+          {Math.round(totals.cal)}/{targets.cal} kcal
+        </span>
+        <span style={{ fontSize: 12, fontWeight: 600, color: MC.p }}>P {Math.round(totals.p)}g</span>
+        <span style={{ fontSize: 12, fontWeight: 600, color: MC.c }}>C {Math.round(totals.c)}g</span>
+        <span style={{ fontSize: 12, fontWeight: 600, color: MC.f }}>F {Math.round(totals.f)}g</span>
+      </div>
     </div>
+  );
+}
+
+function EditDayModal({ dateStr, dayData, onSave, onClose }) {
+  const [entries, setEntries] = useState(dayData.entries || []);
+  const [showAddFood, setShowAddFood] = useState(false);
+
+  const totals = {
+    cal: entries.reduce((a, e) => a + e.macros.cal, 0),
+    p:   entries.reduce((a, e) => a + e.macros.p, 0),
+    c:   entries.reduce((a, e) => a + e.macros.c, 0),
+    f:   entries.reduce((a, e) => a + e.macros.f, 0),
+  };
+
+  function handleSave() {
+    const tgt = dayData.targets;
+    const score = [
+      [totals.cal, tgt.cal], [totals.p, tgt.p], [totals.c, tgt.c], [totals.f, tgt.f],
+    ].filter(([v, t]) => Math.abs(v / t - 1) <= TIGHT).length;
+    const updated = { ...dayData, totals, score, entries };
+    localStorage.setItem(`day_${dateStr}`, JSON.stringify(updated));
+    onSave(updated);
+    onClose();
+  }
+
+  return (
+    <>
+      <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 98,
+        display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+        <div style={{ background: "#fff", borderRadius: "16px 16px 0 0", width: "100%", maxWidth: 500,
+          height: "85vh", display: "flex", flexDirection: "column", padding: "20px 16px 24px",
+          boxSizing: "border-box", overflow: "hidden" }}>
+
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexShrink: 0 }}>
+            <div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: "#1a1a1a" }}>Edit {fmtDate(dateStr)}</div>
+              <div style={{ fontSize: 11, color: "#aaa", marginTop: 2 }}>
+                {dayData.isGym ? "Gym day" : "Rest day"} · {dayData.targets.cal} kcal target
+              </div>
+            </div>
+            <button onClick={onClose}
+              style={{ border: "none", background: "#f0f0f0", borderRadius: 20, width: 30, height: 30, cursor: "pointer", fontSize: 16, color: "#555" }}>
+              ×
+            </button>
+          </div>
+
+          <div style={{ display: "flex", gap: 10, marginBottom: 12, padding: "8px 10px", background: "#f8f8f8", borderRadius: 8, flexShrink: 0 }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: statusColor(Math.round(totals.cal), dayData.targets.cal) }}>
+              {Math.round(totals.cal)} kcal
+            </span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: MC.p }}>P {Math.round(totals.p)}g</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: MC.c }}>C {Math.round(totals.c)}g</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: MC.f }}>F {Math.round(totals.f)}g</span>
+          </div>
+
+          <div style={{ flex: 1, overflowY: "auto", minHeight: 0, marginBottom: 12 }}>
+            {entries.length === 0 && (
+              <div style={{ textAlign: "center", color: "#ccc", fontSize: 13, padding: "24px 0" }}>
+                No entries — tap "+ Add Food" below
+              </div>
+            )}
+            {entries.map((e, i) => (
+              <div key={e.id ?? i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center",
+                padding: "9px 10px", borderRadius: 8, marginBottom: 2, background: "#fafafa", border: "1px solid #f0f0f0" }}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: "#1a1a1a" }}>{e.food.name}</div>
+                  <div style={{ fontSize: 11, color: "#aaa" }}>
+                    {e.food.unit === "serving"
+                      ? `${e.qty} serving${e.qty !== 1 ? "s" : ""}`
+                      : `${e.qty}g`}
+                    {" · "}{e.macros.cal} kcal
+                  </div>
+                </div>
+                <button onClick={() => setEntries(entries.filter((_, j) => j !== i))}
+                  style={{ border: "none", background: "none", cursor: "pointer", padding: "4px 6px", display: "flex", alignItems: "center" }}>
+                  <TrashIcon />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+            <button onClick={() => setShowAddFood(true)}
+              style={{ flex: 1, padding: "12px", background: "#f0f0f0", color: "#333", border: "none",
+                borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+              + Add Food
+            </button>
+            <button onClick={handleSave}
+              style={{ flex: 1, padding: "12px", background: "#1a1a1a", color: "#fff", border: "none",
+                borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+              Save Changes
+            </button>
+          </div>
+        </div>
+      </div>
+      {showAddFood && (
+        <AddModal
+          onAdd={(food, qty, macros) => setEntries(prev => [...prev, { id: Date.now(), food, qty, macros }])}
+          onClose={() => setShowAddFood(false)}
+        />
+      )}
+    </>
   );
 }
 
 function ThisMonthTab() {
   const now = new Date();
-  const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth());
-  const [selectedDay, setSelectedDay] = useState(null);
+  const [year, setYear]       = useState(now.getFullYear());
+  const [month, setMonth]     = useState(now.getMonth());
+  const [dayMap, setDayMap]   = useState(() => loadDayMap(now.getFullYear(), now.getMonth()));
+  const [editingDay, setEditingDay] = useState(null);
 
-  if (selectedDay) {
-    return <DayDetail dateStr={selectedDay} onBack={() => setSelectedDay(null)} />;
-  }
-
-  const dim = daysInMonth(year, month);
-  const dayKeys = readDayKeys(year, month);
   const isCurrent = year === now.getFullYear() && month === now.getMonth();
+  const dim = daysInMonthCount(year, month);
+  const sortedDates = Object.keys(dayMap).sort((a, b) => b.localeCompare(a));
 
   function navigate(dir) {
     let m = month + dir, y = year;
-    if (m < 0) { m = 11; y--; }
-    if (m > 11) { m = 0; y++; }
+    if (m < 0)  { m = 11; y--; }
+    if (m > 11) { m = 0;  y++; }
     setMonth(m); setYear(y);
+    setDayMap(loadDayMap(y, m));
+  }
+
+  function handleDelete(dateStr) {
+    localStorage.removeItem(`day_${dateStr}`);
+    setDayMap(prev => { const next = { ...prev }; delete next[dateStr]; return next; });
+  }
+
+  function handleSave(dateStr, updated) {
+    setDayMap(prev => ({ ...prev, [dateStr]: updated }));
   }
 
   return (
@@ -188,7 +265,7 @@ function ThisMonthTab() {
         </button>
         <div style={{ flex: 1, textAlign: "center" }}>
           <div style={{ fontSize: 15, fontWeight: 700, color: "#1a1a1a" }}>{MONTH_NAMES[month]} {year}</div>
-          <div style={{ fontSize: 12, color: "#aaa", marginTop: 2 }}>{dayKeys.length} / {dim} days logged</div>
+          <div style={{ fontSize: 12, color: "#aaa", marginTop: 2 }}>{sortedDates.length} / {dim} days logged</div>
         </div>
         <button onClick={() => navigate(1)} disabled={isCurrent}
           style={{ border: "none", background: "none", cursor: isCurrent ? "default" : "pointer", fontSize: 24,
@@ -197,16 +274,33 @@ function ThisMonthTab() {
         </button>
       </div>
 
-      <div>
-        {dayKeys.length === 0 && (
-          <div style={{ padding: "40px 16px", textAlign: "center", color: "#ccc", fontSize: 13 }}>
-            No days logged for {MONTH_NAMES[month]} {year}
-          </div>
-        )}
-        {dayKeys.map(ds => (
-          <DayRow key={ds} dateStr={ds} data={readDay(ds)} onClick={() => setSelectedDay(ds)} />
-        ))}
-      </div>
+      <TargetBlock label="TARGET (GYM)"  targets={GYM_TARGETS}  borderBottom="0.5px solid #d0d8e8" />
+      <TargetBlock label="TARGET (REST)" targets={REST_TARGETS} borderBottom="2px solid #c7d7f0" />
+
+      {sortedDates.length === 0 ? (
+        <div style={{ padding: "40px 16px", textAlign: "center", color: "#ccc", fontSize: 13 }}>
+          No days logged for {MONTH_NAMES[month]} {year}
+        </div>
+      ) : (
+        sortedDates.map(ds => (
+          <DayRow
+            key={ds}
+            dateStr={ds}
+            data={dayMap[ds]}
+            onEdit={() => setEditingDay(ds)}
+            onDelete={() => handleDelete(ds)}
+          />
+        ))
+      )}
+
+      {editingDay && (
+        <EditDayModal
+          dateStr={editingDay}
+          dayData={dayMap[editingDay]}
+          onSave={(updated) => handleSave(editingDay, updated)}
+          onClose={() => setEditingDay(null)}
+        />
+      )}
     </div>
   );
 }
@@ -214,40 +308,38 @@ function ThisMonthTab() {
 function MonthlyTab() {
   const monthKeys = readMonthKeys();
 
-  if (monthKeys.length === 0) {
-    return (
-      <div style={{ padding: "40px 16px", textAlign: "center", color: "#ccc", fontSize: 13 }}>
-        No monthly data yet — completed months appear here
-      </div>
-    );
-  }
-
   return (
     <div>
-      {monthKeys.map(ym => {
-        const d = readMonth(ym);
-        if (!d) return null;
-        const { year, month, daysInMonth: dim, daysLogged, avgCal, avgP, avgC, avgF, targets } = d;
-        const calCol = statusColor(avgCal, targets.cal);
-        return (
-          <div key={ym} style={{ padding: "14px 16px", background: "#fff", borderBottom: "1px solid #f5f5f5" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-              <span style={{ fontSize: 14, fontWeight: 700, color: "#1a1a1a" }}>{MONTH_NAMES[month]} {year}</span>
-              <span style={{ fontSize: 12, color: "#aaa" }}>{daysLogged}/{dim} days</span>
-            </div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: calCol }}>
-                {Math.round(avgCal)}/{targets.cal} kcal avg
-              </span>
-              {[["P", avgP, targets.p], ["C", avgC, targets.c], ["F", avgF, targets.f]].map(([l, v, t]) => (
-                <span key={l} style={{ fontSize: 11, color: "#888" }}>
-                  {l} {Math.round(v)}/{t}g
+      <TargetBlock label="TARGET (GYM — DAILY REF)" targets={GYM_TARGETS} borderBottom="2px solid #c7d7f0" />
+
+      {monthKeys.length === 0 ? (
+        <div style={{ padding: "40px 16px", textAlign: "center", color: "#ccc", fontSize: 13 }}>
+          No monthly data yet — completed months appear here
+        </div>
+      ) : (
+        monthKeys.map(ym => {
+          const d = readMonth(ym);
+          if (!d) return null;
+          const { year, month, daysInMonth: dim, daysLogged, avgCal, avgP, avgC, avgF, targets } = d;
+          const calCol = statusColor(avgCal, targets.cal);
+          return (
+            <div key={ym} style={{ padding: "14px 16px", background: "#fff", borderBottom: "1px solid #f5f5f5" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                <span style={{ fontSize: 14, fontWeight: 700, color: "#1a1a1a" }}>{MONTH_NAMES[month]} {year}</span>
+                <span style={{ fontSize: 12, color: "#aaa" }}>{daysLogged}/{dim} days</span>
+              </div>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: calCol }}>
+                  {Math.round(avgCal)}/{targets.cal} kcal avg
                 </span>
-              ))}
+                <span style={{ fontSize: 12, fontWeight: 600, color: MC.p }}>P {Math.round(avgP)}g</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: MC.c }}>C {Math.round(avgC)}g</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: MC.f }}>F {Math.round(avgF)}g</span>
+              </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })
+      )}
     </div>
   );
 }

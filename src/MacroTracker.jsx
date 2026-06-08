@@ -518,7 +518,7 @@ export default function MacroTracker() {
           totals={totals}
           target={target}
           onEdit={() => setSubmitted(false)}
-          onClearAll={() => { clearStorage(); setSubmitted(false); setLog([]); }}
+          onClearAll={() => { clearStorage(); localStorage.removeItem(`day_${todayKey()}`); setSubmitted(false); setLog([]); }}
           onReset={() => { clearStorage(); setSubmitted(false); setLog([]); setTodayDate(new Date()); }}
         />
       )}
@@ -535,7 +535,7 @@ export default function MacroTracker() {
               const score = [totals.cal, totals.p, totals.c, totals.f]
                 .filter((v, i) => Math.abs(v / [target.cal, target.p, target.c, target.f][i] - 1) <= 0.05).length;
               localStorage.setItem(`day_${todayKey()}`, JSON.stringify({
-                date: todayKey(), isGym, targets: target, totals, score,
+                date: todayKey(), isGym, targets: target, totals, score, entries: [...log],
               }));
               setSubmitted(true);
             }} disabled={log.length === 0}
@@ -558,3 +558,5 @@ export default function MacroTracker() {
     </div>
   );
 }
+
+export { FOODS, CATS, CAT_EMOJIS, calcMacros, AddModal };
