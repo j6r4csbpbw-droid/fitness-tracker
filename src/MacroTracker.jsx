@@ -442,8 +442,8 @@ export default function MacroTracker() {
   const [submitted, setSubmitted] = useState(stored?.submitted ?? false);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ date: todayKey(), log, isGym, submitted }));
-  }, [log, isGym, submitted]);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ date: currentDate.toISOString().split('T')[0], log, isGym, submitted }));
+  }, [log, isGym, submitted, currentDate]);
 
   const target = TARGETS[isGym ? "gym" : "rest"];
   const totals = {
