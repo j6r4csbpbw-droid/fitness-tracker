@@ -419,10 +419,12 @@ function SummaryCard({ totals, target, onReset, onEdit, onClearAll }) {
 }
 
 export default function MacroTracker() {
-  const [isGym, setIsGym] = useState(() => loadStorage()?.isGym ?? true);
-  const [log, setLog] = useState(() => loadStorage()?.log ?? []);
+  // Call loadStorage() once so all three initialisers read the same snapshot.
+  const [stored] = useState(loadStorage);
+  const [isGym, setIsGym] = useState(stored?.isGym ?? true);
+  const [log, setLog] = useState(stored?.log ?? []);
   const [showModal, setShowModal] = useState(false);
-  const [submitted, setSubmitted] = useState(() => loadStorage()?.submitted ?? false);
+  const [submitted, setSubmitted] = useState(stored?.submitted ?? false);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ date: todayKey(), log, isGym, submitted }));
