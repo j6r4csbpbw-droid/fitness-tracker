@@ -1,4 +1,23 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+
+const STORAGE_KEY = "macroTracker";
+const todayKey = () => new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
+
+function loadStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (data.date !== todayKey()) return null; // stale — different day
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+function clearStorage() {
+  localStorage.removeItem(STORAGE_KEY);
+}
 
 const TARGETS = {
   gym:  { cal: 2850, p: 180, c: 340, f: 94 },
@@ -398,10 +417,14 @@ function SummaryCard({ totals, target, onReset }) {
 }
 
 export default function MacroTracker() {
-  const [isGym, setIsGym] = useState(true);
-  const [log, setLog] = useState([]);
+  const [isGym, setIsGym] = useState(() => loadStorage()?.isGym ?? true);
+  const [log, setLog] = useState(() => loadStorage()?.log ?? []);
   const [showModal, setShowModal] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [submitted, setSubmitted] = useState(() => loadStorage()?.submitted ?? false);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ date: todayKey(), log, isGym, submitted }));
+  }, [log, isGym, submitted]);
 
   const target = TARGETS[isGym ? "gym" : "rest"];
   const totals = {
@@ -471,7 +494,7 @@ export default function MacroTracker() {
         </div>
       )}
 
-      {submitted && <SummaryCard totals={totals} target={target} onReset={() => { setSubmitted(false); setLog([]); }} />}
+      {submitted && <SummaryCard totals={totals} target={target} onReset={() => { clearStorage(); setSubmitted(false); setLog([]); }} />}
 
       {!submitted && (
         <div style={{ position: "fixed", bottom: 24, right: "50%", transform: "translateX(50%)", maxWidth: "calc(500px - 32px)", width: "calc(100% - 32px)", display: "flex", gap: 10 }}>
