@@ -441,7 +441,8 @@ export default function MacroTracker() {
     c:   log.reduce((a, e) => a + e.macros.c, 0),
     f:   log.reduce((a, e) => a + e.macros.f, 0),
   };
-  const today = new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+  const [todayDate, setTodayDate] = useState(() => new Date());
+  const today = todayDate.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
 
   return (
     <div style={{ fontFamily: "system-ui, sans-serif", background: "#f8f8f8", minHeight: "100vh", paddingBottom: 90 }}>
@@ -518,7 +519,7 @@ export default function MacroTracker() {
           target={target}
           onEdit={() => setSubmitted(false)}
           onClearAll={() => { clearStorage(); setSubmitted(false); setLog([]); }}
-          onReset={() => { clearStorage(); setSubmitted(false); setLog([]); }}
+          onReset={() => { clearStorage(); setSubmitted(false); setLog([]); setTodayDate(new Date()); }}
         />
       )}
 
