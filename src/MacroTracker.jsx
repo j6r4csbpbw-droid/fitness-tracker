@@ -240,9 +240,9 @@ function AddModal({ onAdd, onClose }) {
       onClick={e => e.target === e.currentTarget && onClose()}>
       <div style={{
         background: "#fff", borderRadius: "16px 16px 0 0", width: "100%", maxWidth: 500,
-        height: "92vh",
+        height: "85vh",
         display: "flex", flexDirection: "column", padding: "20px 16px 24px",
-        boxSizing: "border-box"
+        boxSizing: "border-box", overflow: "hidden"
       }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, flexShrink: 0 }}>
           <span style={{ fontSize: 16, fontWeight: 700 }}>Add Food</span>
@@ -270,7 +270,7 @@ function AddModal({ onAdd, onClose }) {
           ))}
         </div>
 
-        <div style={{ flex: 1, overflowY: "auto", marginBottom: 12 }}>
+        <div style={{ flex: 1, overflowY: "auto", minHeight: 0, marginBottom: 12 }}>
           {filtered.map(food => (
             <div key={food.name} onClick={() => { setSelected(food); setQty(0); }}
               style={{ padding: "9px 10px", borderRadius: 8, cursor: "pointer", marginBottom: 2,
