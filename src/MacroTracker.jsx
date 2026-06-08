@@ -342,7 +342,7 @@ function AddModal({ onAdd, onClose }) {
   );
 }
 
-function SummaryCard({ totals, target, onReset }) {
+function SummaryCard({ totals, target, onReset, onEdit, onClearAll }) {
   const items = [
     { label: "Calories", val: Math.round(totals.cal), tgt: target.cal, unit: "kcal", dot: "#6366f1" },
     { label: "Protein",  val: Math.round(totals.p),   tgt: target.p,   unit: "g",    dot: "#3b82f6" },
@@ -350,24 +350,19 @@ function SummaryCard({ totals, target, onReset }) {
     { label: "Fat",      val: Math.round(totals.f),   tgt: target.f,   unit: "g",    dot: "#10b981" },
   ];
   const score = items.filter(i => getStatus(i.val, i.tgt) === "hit").length;
-  const bannerBg = score === 4
-    ? "linear-gradient(135deg,#14532d,#16a34a)"
-    : score >= 2
-    ? "linear-gradient(135deg,#1e3a5f,#2563eb)"
-    : "linear-gradient(135deg,#1a1a1a,#374151)";
 
   return (
     <div style={{ margin: "12px 12px 90px" }}>
-      <div style={{ background: bannerBg, borderRadius: "12px 12px 0 0", padding: "16px 16px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div style={{ background: "#fafaf9", borderBottom: "0.5px solid #e5e5e5", borderRadius: "12px 12px 0 0", padding: "16px 16px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" }}>Day Complete</div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", marginTop: 2 }}>
+          <div style={{ fontSize: 11, color: "#9a9a9a", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" }}>Day Complete</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: "#1a1a1a", marginTop: 2 }}>
             {score === 4 ? "🎯 Perfect day" : score >= 3 ? "💪 Strong day" : score >= 2 ? "📊 Decent day" : "📉 Off today"}
           </div>
         </div>
         <div style={{ textAlign: "right" }}>
-          <div style={{ fontSize: 32, fontWeight: 900, color: "#fff", lineHeight: 1 }}>{score}<span style={{ fontSize: 16, color: "rgba(255,255,255,0.4)" }}>/4</span></div>
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>targets hit</div>
+          <div style={{ fontSize: 32, fontWeight: 900, color: "#1a1a1a", lineHeight: 1 }}>{score}<span style={{ fontSize: 16, color: "#aaa" }}>/4</span></div>
+          <div style={{ fontSize: 11, color: "#aaa" }}>targets hit</div>
         </div>
       </div>
 
@@ -405,10 +400,20 @@ function SummaryCard({ totals, target, onReset }) {
         })}
       </div>
 
-      <button onClick={onReset}
-        style={{ width: "100%", padding: "13px", background: "#1a1a1a", color: "#fff", border: "none", borderRadius: "0 0 12px 12px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
-        Start New Day
-      </button>
+      <div style={{ display: "flex", gap: 8, padding: "12px 12px", background: "#fff", borderRadius: "0 0 12px 12px", borderTop: "1px solid #f5f5f5" }}>
+        <button onClick={onEdit}
+          style={{ flex: 1, padding: "12px", background: "#f0f0f0", color: "#333", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+          Edit log
+        </button>
+        <button onClick={onClearAll}
+          style={{ flex: 1, padding: "12px", background: "#fef2f2", color: "#ef4444", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+          Clear all
+        </button>
+        <button onClick={onReset}
+          style={{ flex: 1, padding: "12px", background: "#1a1a1a", color: "#fff", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+          New day
+        </button>
+      </div>
     </div>
   );
 }
@@ -465,7 +470,14 @@ export default function MacroTracker() {
         <div style={{ margin: "12px 12px 0", background: "#fff", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
           <div style={{ padding: "14px 14px 8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span style={{ fontSize: 13, fontWeight: 700, color: "#333" }}>Today's Log</span>
-            <span style={{ fontSize: 11, color: "#aaa" }}>{log.length} {log.length === 1 ? "entry" : "entries"}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 11, color: "#aaa" }}>{log.length} {log.length === 1 ? "entry" : "entries"}</span>
+              {log.length > 0 && (
+                <button onClick={() => setLog([])} style={{ background: "none", border: "none", fontSize: 11, fontWeight: 600, color: "#ef4444", cursor: "pointer", padding: 0 }}>
+                  Clear all
+                </button>
+              )}
+            </div>
           </div>
           {log.length === 0 && (
             <div style={{ padding: "28px 16px", textAlign: "center", color: "#ccc", fontSize: 13 }}>No food logged yet — tap + to add</div>
@@ -491,7 +503,15 @@ export default function MacroTracker() {
         </div>
       )}
 
-      {submitted && <SummaryCard totals={totals} target={target} onReset={() => { clearStorage(); setSubmitted(false); setLog([]); }} />}
+      {submitted && (
+        <SummaryCard
+          totals={totals}
+          target={target}
+          onEdit={() => setSubmitted(false)}
+          onClearAll={() => { clearStorage(); setSubmitted(false); setLog([]); }}
+          onReset={() => { clearStorage(); setSubmitted(false); setLog([]); }}
+        />
+      )}
 
       {!submitted && (
         <div style={{ position: "fixed", bottom: 24, right: "50%", transform: "translateX(50%)", maxWidth: "calc(500px - 32px)", width: "calc(100% - 32px)", display: "flex", gap: 10 }}>
