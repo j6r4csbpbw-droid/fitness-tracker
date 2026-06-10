@@ -461,6 +461,7 @@ export default function MacroTracker() {
   const [log, setLog] = useState(stored?.log ?? []);
   const [showModal, setShowModal] = useState(false);
   const [submitted, setSubmitted] = useState(stored?.submitted ?? false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   // Keep working_date in localStorage in sync whenever it changes
   useEffect(() => {
@@ -490,6 +491,43 @@ export default function MacroTracker() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ date: formatDateKey(workingDate), log, isGym, submitted }));
   }, [log, isGym, submitted, workingDate]);
 
+  function switchToDate(newDate) {
+    const newKey = formatDateKey(newDate);
+    // Check for a completed submitted day
+    const completedRaw = localStorage.getItem(`day_${newKey}`);
+    if (completedRaw) {
+      try {
+        const data = JSON.parse(completedRaw);
+        clearStorage();
+        setIsGym(data.isGym ?? true);
+        setLog(data.entries ?? []);
+        setWorkingDate(newDate);
+        setSubmitted(true);
+        return;
+      } catch { /* fall through */ }
+    }
+    // Check for an in-progress session for this date
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const session = JSON.parse(raw);
+        if (session.date === newKey) {
+          setIsGym(session.isGym ?? true);
+          setLog(session.log ?? []);
+          setWorkingDate(newDate);
+          setSubmitted(session.submitted ?? false);
+          return;
+        }
+      }
+    } catch { /* fall through */ }
+    // No data for this date — start fresh
+    clearStorage();
+    setIsGym(true);
+    setLog([]);
+    setSubmitted(false);
+    setWorkingDate(newDate);
+  }
+
   const target = TARGETS[isGym ? "gym" : "rest"];
   const totals = {
     cal: log.reduce((a, e) => a + e.macros.cal, 0),
@@ -505,7 +543,31 @@ export default function MacroTracker() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
           <div>
             <div style={{ fontSize: 11, color: "#666", fontWeight: 600, letterSpacing: 1 }}>MACRO TRACKER</div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginTop: 2 }}>{formatDateDisplay(workingDate)}</div>
+            {showDatePicker ? (
+              <input
+                type="date"
+                value={formatDateKey(workingDate)}
+                autoFocus
+                onBlur={() => setShowDatePicker(false)}
+                onChange={e => {
+                  if (!e.target.value) return;
+                  const [y, m, d] = e.target.value.split("-").map(Number);
+                  switchToDate(new Date(y, m - 1, d));
+                  setShowDatePicker(false);
+                }}
+                style={{ fontSize: 14, fontWeight: 700, color: "#fff", background: "rgba(255,255,255,0.15)",
+                  border: "1px solid rgba(255,255,255,0.35)", borderRadius: 6, padding: "4px 8px",
+                  marginTop: 4, outline: "none", colorScheme: "dark", width: 150 }}
+              />
+            ) : (
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2, cursor: "pointer" }}
+                onClick={() => setShowDatePicker(true)}>
+                <span style={{ fontSize: 16, fontWeight: 700, color: "#fff" }}>{formatDateDisplay(workingDate)}</span>
+                <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+              </div>
+            )}
           </div>
           <div style={{ display: "flex", background: "rgba(255,255,255,0.12)", borderRadius: 20, padding: 3, gap: 2 }}>
             {[["gym","🏋️ Gym"],["rest","🛋️ Rest"]].map(([key, label]) => {
