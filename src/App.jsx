@@ -85,7 +85,9 @@ export default function App() {
         ))}
       </nav>
 
-      {view === "tracker" ? <MacroTracker /> : view === "library" ? <FoodLibrary /> : <HistoryView />}
+      <div style={{ display: view === "tracker" ? undefined : "none" }}><MacroTracker /></div>
+      <div style={{ display: view === "library" ? undefined : "none" }}><FoodLibrary /></div>
+      <div style={{ display: view === "history" ? undefined : "none" }}><HistoryView /></div>
     </div>
   );
 }
