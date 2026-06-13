@@ -533,7 +533,7 @@ export default function MacroTracker() {
       <div style={{ background: "#1e3a5f", padding: "20px 16px 24px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
           <div>
-            <div style={{ fontSize: 11, color: "#666", fontWeight: 600, letterSpacing: 1 }}>MACRO TRACKER</div>
+            <div style={{ fontSize: 11, color: "#666", fontWeight: 600, letterSpacing: 1 }}>EAT</div>
             {showDatePicker ? (
               <input
                 type="date"
