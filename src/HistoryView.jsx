@@ -54,6 +54,37 @@ function fmtDate(dateStr) {
   return `${DAY_ABBR[dow]} ${d} ${SHORT_MONTHS[m - 1]}`;
 }
 
+function exportData() {
+  const data = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k) data[k] = localStorage.getItem(k);
+  }
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `eat-backup-${new Date().toLocaleDateString("en-CA")}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      for (const [k, v] of Object.entries(data)) {
+        localStorage.setItem(k, v);
+      }
+      window.location.reload();
+    } catch {
+      alert("Import failed — invalid backup file.");
+    }
+  };
+  reader.readAsText(file);
+}
+
 function PencilIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#93c5fd" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -364,6 +395,21 @@ export default function HistoryView() {
               {label}
             </button>
           ))}
+        </div>
+        <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+          <button onClick={exportData}
+            style={{ flex: 1, padding: "7px 0", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)",
+              borderRadius: 8, cursor: "pointer", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>
+            ↓ Export backup
+          </button>
+          <label style={{ flex: 1, padding: "7px 0", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)",
+            borderRadius: 8, cursor: "pointer", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.7)",
+            textAlign: "center", display: "block" }}>
+            ↑ Import backup
+            <input type="file" accept=".json"
+              onChange={e => { if (e.target.files[0]) importData(e.target.files[0]); e.target.value = ""; }}
+              style={{ display: "none" }} />
+          </label>
         </div>
       </div>
       {subTab === "thisMonth" ? <ThisMonthTab /> : <MonthlyTab />}
