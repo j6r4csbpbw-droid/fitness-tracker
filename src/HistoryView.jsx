@@ -65,6 +65,7 @@ function exportData() {
   const a = document.createElement("a");
   a.href = url;
   a.download = `eat-backup-${new Date().toLocaleDateString("en-CA")}.json`;
+  localStorage.setItem("last_export", new Date().toLocaleDateString("en-CA"));
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -159,6 +160,7 @@ function DayRow({ dateStr, data, onEdit, onDelete }) {
 
 function EditDayModal({ dateStr, dayData, onSave, onClose }) {
   const [entries, setEntries] = useState(dayData.entries || []);
+  const [isGym, setIsGym] = useState(dayData.isGym ?? true);
   const [showAddFood, setShowAddFood] = useState(false);
 
   const totals = {
@@ -169,11 +171,11 @@ function EditDayModal({ dateStr, dayData, onSave, onClose }) {
   };
 
   function handleSave() {
-    const tgt = dayData.targets;
+    const tgt = isGym ? GYM_TARGETS : REST_TARGETS;
     const score = [
       [totals.cal, tgt.cal], [totals.p, tgt.p], [totals.c, tgt.c], [totals.f, tgt.f],
     ].filter(([v, t]) => Math.abs(v / t - 1) <= TIGHT).length;
-    const updated = { ...dayData, totals, score, entries };
+    const updated = { ...dayData, isGym, targets: tgt, totals, score, entries };
     localStorage.setItem(`day_${dateStr}`, JSON.stringify(updated));
     onSave(updated);
     onClose();
@@ -190,8 +192,16 @@ function EditDayModal({ dateStr, dayData, onSave, onClose }) {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexShrink: 0 }}>
             <div>
               <div style={{ fontSize: 16, fontWeight: 700, color: "#1a1a1a" }}>Edit {fmtDate(dateStr)}</div>
-              <div style={{ fontSize: 11, color: "#aaa", marginTop: 2 }}>
-                {dayData.isGym ? "Gym day" : "Rest day"} · {dayData.targets.cal} kcal target
+              <div style={{ display: "flex", background: "#f0f0f0", borderRadius: 16, padding: 2, gap: 1, marginTop: 6 }}>
+                {[["gym", "🏋️ Gym"], ["rest", "🛋️ Rest"]].map(([key, label]) => (
+                  <button key={key} onClick={() => setIsGym(key === "gym")}
+                    style={{ padding: "4px 10px", borderRadius: 13, border: "none", cursor: "pointer",
+                      fontSize: 11, fontWeight: 600,
+                      background: (isGym ? "gym" : "rest") === key ? "#1a1a1a" : "transparent",
+                      color: (isGym ? "gym" : "rest") === key ? "#fff" : "#888" }}>
+                    {label}
+                  </button>
+                ))}
               </div>
             </div>
             <button onClick={onClose}
@@ -201,7 +211,7 @@ function EditDayModal({ dateStr, dayData, onSave, onClose }) {
           </div>
 
           <div style={{ display: "flex", gap: 10, marginBottom: 12, padding: "8px 10px", background: "#f8f8f8", borderRadius: 8, flexShrink: 0 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: statusColor(Math.round(totals.cal), dayData.targets.cal) }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: statusColor(Math.round(totals.cal), (isGym ? GYM_TARGETS : REST_TARGETS).cal) }}>
               {Math.round(totals.cal)} kcal
             </span>
             <span style={{ fontSize: 12, fontWeight: 600, color: MC.p }}>P {Math.round(totals.p)}g</span>
@@ -379,6 +389,7 @@ function MonthlyTab() {
 
 export default function HistoryView() {
   const [subTab, setSubTab] = useState("thisMonth");
+  const [lastExport, setLastExport] = useState(() => localStorage.getItem("last_export"));
   return (
     <div style={{ fontFamily: "system-ui, sans-serif", minHeight: "100vh", background: "#f8f8f8" }}>
       <div style={{ background: "#1e3a5f", padding: "20px 16px 16px" }}>
@@ -396,8 +407,11 @@ export default function HistoryView() {
             </button>
           ))}
         </div>
-        <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-          <button onClick={exportData}
+        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", textAlign: "center", marginTop: 8 }}>
+          {lastExport ? `Last backup: ${lastExport}` : "No backup saved yet"}
+        </div>
+        <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
+          <button onClick={() => { exportData(); setLastExport(new Date().toLocaleDateString("en-CA")); }}
             style={{ flex: 1, padding: "7px 0", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)",
               borderRadius: 8, cursor: "pointer", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>
             ↓ Export backup

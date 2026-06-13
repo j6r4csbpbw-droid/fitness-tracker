@@ -483,6 +483,9 @@ export default function MacroTracker() {
   }, [log, isGym, submitted, workingDate]);
 
   function switchToDate(newDate) {
+    if (log.length > 0 && !submitted) {
+      if (!window.confirm("You have unsaved entries that will be lost. Switch date anyway?")) return;
+    }
     const newKey = formatDateKey(newDate);
     // Check for a completed submitted day
     const completedRaw = localStorage.getItem(`day_${newKey}`);
@@ -527,6 +530,8 @@ export default function MacroTracker() {
     f:   log.reduce((a, e) => a + e.macros.f, 0),
   };
 
+  const isOnToday = formatDateKey(workingDate) === formatDateKey(new Date());
+
   return (
     <div style={{ fontFamily: "system-ui, sans-serif", background: "#f8f8f8", minHeight: "100vh", paddingBottom: 90 }}>
 
@@ -558,6 +563,14 @@ export default function MacroTracker() {
                   <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
                 </svg>
               </div>
+            )}
+            {!isOnToday && !showDatePicker && (
+              <button onClick={() => switchToDate(new Date())}
+                style={{ marginTop: 5, fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.55)",
+                  background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)",
+                  borderRadius: 10, padding: "2px 8px", cursor: "pointer" }}>
+                → Today
+              </button>
             )}
           </div>
           <div style={{ display: "flex", background: "rgba(255,255,255,0.12)", borderRadius: 20, padding: 3, gap: 2 }}>
@@ -652,7 +665,7 @@ export default function MacroTracker() {
               cursor: log.length === 0 ? "default" : "pointer",
               boxShadow: log.length === 0 ? "none" : "0 4px 20px rgba(34,197,94,0.35)",
               display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-            ✓ Done for Today
+            {isOnToday ? "✓ Done for Today" : "✓ Submit Day"}
           </button>
         </div>
       )}
