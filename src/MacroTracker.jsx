@@ -434,24 +434,15 @@ function SummaryCard({ totals, target, onReset, onEdit, onClearAll }) {
 }
 
 export default function MacroTracker() {
-  // workingDate: starts as actual today, or restores an already-advanced date from localStorage.
-  // On "New Day" it advances by one calendar day. All saving/display uses this date.
   const [workingDate, setWorkingDate] = useState(() => {
-    const actualToday = new Date();
-    const actualTodayKey = formatDateKey(actualToday);
     const savedKey = localStorage.getItem("working_date");
-
-    if (savedKey && savedKey >= actualTodayKey) {
-      // User already advanced the date (or it's today) — restore it
+    if (savedKey) {
       const [y, m, d] = savedKey.split("-").map(Number);
       return new Date(y, m - 1, d);
     }
-    // Stored date is in the past (calendar rolled over while app was closed) — reset session
-    if (savedKey && savedKey < actualTodayKey) {
-      localStorage.removeItem(STORAGE_KEY);
-    }
-    localStorage.setItem("working_date", actualTodayKey);
-    return actualToday;
+    const today = new Date();
+    localStorage.setItem("working_date", formatDateKey(today));
+    return today;
   });
 
   // Load session that matches the working date (null if none or stale)
