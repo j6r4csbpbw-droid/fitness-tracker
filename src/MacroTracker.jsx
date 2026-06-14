@@ -29,6 +29,68 @@ function clearStorage() {
   localStorage.removeItem(STORAGE_KEY);
 }
 
+const MACRO_CORRECTIONS = {
+  "Chicken breast — skinless":    { cal: 120, p: 23, c: 0, f: 2 },
+  "Chicken thigh — skinless":     { cal: 145, p: 19, c: 0, f: 7 },
+  "Chicken thigh — skin-on":      { cal: 190, p: 18, c: 0, f: 14 },
+  "Chicken drumstick — skinless": { cal: 130, p: 21, c: 0, f: 4 },
+  "Chicken drumstick — skin-on":  { cal: 175, p: 19, c: 0, f: 11 },
+  "Chicken leg — skinless":       { cal: 158, p: 20, c: 0, f: 6 },
+  "Chicken leg — skin-on":        { cal: 215, p: 18, c: 0, f: 14 },
+  "Salmon":                       { cal: 175, p: 20, c: 0, f: 11 },
+  "Prawns":                       { cal: 71,  p: 14, c: 0, f: 1 },
+  "Tuna — canned":                { cal: 116, p: 25, c: 0, f: 0.8 },
+  "Mackerel":                     { cal: 205, p: 19, c: 0, f: 14 },
+};
+
+function runMacroMigrationV1() {
+  if (localStorage.getItem("macro_migration_v1") === "done") return;
+  const keys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith("day_")) keys.push(k);
+  }
+  for (const key of keys) {
+    try {
+      const day = JSON.parse(localStorage.getItem(key));
+      if (!day || !Array.isArray(day.entries)) continue;
+      let changed = false;
+      for (const entry of day.entries) {
+        const corrected = MACRO_CORRECTIONS[entry.food?.name];
+        if (!corrected) continue;
+        entry.food.cal = corrected.cal;
+        entry.food.p   = corrected.p;
+        entry.food.c   = corrected.c;
+        entry.food.f   = corrected.f;
+        const mult = entry.food.unit === "serving" ? entry.qty : entry.qty / 100;
+        entry.macros = {
+          cal: Math.round(corrected.cal * mult * 10) / 10,
+          p:   Math.round(corrected.p   * mult * 10) / 10,
+          c:   Math.round(corrected.c   * mult * 10) / 10,
+          f:   Math.round(corrected.f   * mult * 10) / 10,
+        };
+        changed = true;
+      }
+      if (!changed) continue;
+      day.totals = {
+        cal: day.entries.reduce((a, e) => a + e.macros.cal, 0),
+        p:   day.entries.reduce((a, e) => a + e.macros.p,   0),
+        c:   day.entries.reduce((a, e) => a + e.macros.c,   0),
+        f:   day.entries.reduce((a, e) => a + e.macros.f,   0),
+      };
+      const t = day.targets;
+      day.score = [
+        [day.totals.cal, t.cal], [day.totals.p, t.p],
+        [day.totals.c,   t.c],   [day.totals.f, t.f],
+      ].filter(([v, tgt]) => Math.abs(v / tgt - 1) <= 0.05).length;
+      localStorage.setItem(key, JSON.stringify(day));
+    } catch { /* skip malformed entries */ }
+  }
+  localStorage.setItem("macro_migration_v1", "done");
+}
+
+runMacroMigrationV1();
+
 const TARGETS = {
   gym:  { cal: 2850, p: 180, c: 340, f: 94 },
   rest: { cal: 2550, p: 180, c: 255, f: 85 },
