@@ -74,6 +74,7 @@ const FOODS = [
   { cat: "Produce", name: "Cucumber", cal: 15, p: 0.7, c: 3.6, f: 0.1, unit: "g" },
   { cat: "Produce", name: "Edamame — shelled", cal: 122, p: 11, c: 10, f: 5, unit: "g" },
   { cat: "Produce", name: "Frozen peas", cal: 77, p: 5, c: 14, f: 0.4, unit: "g" },
+  { cat: "Produce", name: "Green beans", cal: 31, p: 1.8, c: 7, f: 0.1, unit: "g" },
   { cat: "Produce", name: "Kale", cal: 49, p: 4.3, c: 9, f: 0.9, unit: "g" },
   { cat: "Produce", name: "Kidney beans — canned", cal: 100, p: 7, c: 18, f: 0.5, unit: "g" },
   { cat: "Produce", name: "Onion (1 medium)", cal: 60, p: 1.8, c: 14, f: 0.1, unit: "serving", servingG: 150 },
