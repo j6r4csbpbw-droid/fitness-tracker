@@ -130,9 +130,10 @@ const FOODS = [
   { cat: "Dirty", name: "Steak & ale pie", cal: 1110, p: 34, c: 105, f: 58, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "Whisky (25ml)", cal: 55, p: 0, c: 0, f: 0, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "Wine — red (175ml glass)", cal: 130, p: 0.1, c: 4, f: 0, unit: "serving", servingG: 1 },
-  { cat: "Dirty", name: "Cheat meal — mild", cal: 750, p: 25, c: 80, f: 35, unit: "serving", servingG: 1 },
-  { cat: "Dirty", name: "Cheat meal — moderate", cal: 1100, p: 30, c: 110, f: 55, unit: "serving", servingG: 1 },
-  { cat: "Dirty", name: "Cheat meal — nuclear", cal: 1600, p: 35, c: 160, f: 85, unit: "serving", servingG: 1 },
+  { cat: "Dirty", name: "Cheat meal — mild", cal: 1000, p: 30, c: 100, f: 48, unit: "serving", servingG: 1 },
+  { cat: "Dirty", name: "Cheat meal — moderate", cal: 1500, p: 35, c: 145, f: 68, unit: "serving", servingG: 1 },
+  { cat: "Dirty", name: "Cheat meal — nuclear", cal: 2000, p: 40, c: 195, f: 95, unit: "serving", servingG: 1 },
+  { cat: "Dirty", name: "Fries — medium serving", cal: 530, p: 6, c: 68, f: 26, unit: "serving", servingG: 200 },
   { cat: "Dirty", name: "Dark chocolate — 85%", cal: 598, p: 7, c: 20, f: 50, unit: "g" },
 ];
 
