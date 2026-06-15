@@ -140,6 +140,7 @@ const FOODS = [
   { cat: "Produce", name: "Onion (1 medium)", cal: 60, p: 1.8, c: 14, f: 0.1, unit: "serving", servingG: 150 },
   { cat: "Produce", name: "Potato (1 medium)", cal: 116, p: 3, c: 25.5, f: 0.15, unit: "serving", servingG: 150 },
   { cat: "Produce", name: "Red lentils (per 60g dry)", cal: 211, p: 14, c: 38, f: 0.7, unit: "serving", servingG: 60 },
+  { cat: "Produce", name: "Red cabbage", cal: 31, p: 1.4, c: 7, f: 0.2, unit: "g" },
   { cat: "Produce", name: "Spinach — raw", cal: 23, p: 2.9, c: 3.6, f: 0.4, unit: "g" },
   { cat: "Produce", name: "Sweet potato (1 medium)", cal: 112, p: 2.1, c: 26, f: 0.13, unit: "serving", servingG: 130 },
   { cat: "Produce", name: "Tomatoes — canned", cal: 16, p: 1, c: 3, f: 0.2, unit: "g" },
