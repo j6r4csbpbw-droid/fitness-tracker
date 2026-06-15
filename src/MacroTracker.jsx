@@ -676,7 +676,7 @@ export default function MacroTracker() {
             <div style={{ padding: "28px 16px", textAlign: "center", color: "#ccc", fontSize: 13 }}>No food logged yet — tap + to add</div>
           )}
           {log.map(entry => (
-            <div key={entry.id} style={{ padding: "10px 14px", borderTop: "1px solid #f5f5f5", display: "flex", alignItems: "center", gap: 10 }}>
+            <div key={entry.id} style={{ padding: "10px 14px", borderTop: "1px solid #f5f5f5", display: "flex", alignItems: "center", flexWrap: "nowrap", gap: 10 }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{entry.food.name}</div>
                 <div style={{ fontSize: 11, color: "#aaa", marginTop: 1 }}>
@@ -684,10 +684,10 @@ export default function MacroTracker() {
                 </div>
               </div>
               <div style={{ display: "flex", gap: 5, fontSize: 11, alignItems: "center", flexShrink: 0 }}>
-                <span style={{ background: "#f0f7ff", color: C.p, padding: "2px 6px", borderRadius: 6, fontWeight: 600 }}>{entry.macros.p}p</span>
-                <span style={{ background: "#fffbeb", color: "#b45309", padding: "2px 6px", borderRadius: 6, fontWeight: 600 }}>{entry.macros.c}c</span>
-                <span style={{ background: "#f0fdf4", color: "#059669", padding: "2px 6px", borderRadius: 6, fontWeight: 600 }}>{entry.macros.f}f</span>
-                <span style={{ color: "#555", fontWeight: 700, fontSize: 12, minWidth: 42, textAlign: "right" }}>{entry.macros.cal}<span style={{ fontSize: 10, fontWeight: 400, color: "#aaa" }}>k</span></span>
+                <span style={{ background: "#f0f7ff", color: C.p, padding: "2px 6px", borderRadius: 6, fontWeight: 600, width: 50, textAlign: "center", flexShrink: 0 }}>{entry.macros.p}p</span>
+                <span style={{ background: "#fffbeb", color: "#b45309", padding: "2px 6px", borderRadius: 6, fontWeight: 600, width: 50, textAlign: "center", flexShrink: 0 }}>{entry.macros.c}c</span>
+                <span style={{ background: "#f0fdf4", color: "#059669", padding: "2px 6px", borderRadius: 6, fontWeight: 600, width: 50, textAlign: "center", flexShrink: 0 }}>{entry.macros.f}f</span>
+                <span style={{ color: "#555", fontWeight: 700, fontSize: 12, width: 46, textAlign: "right", flexShrink: 0 }}>{entry.macros.cal}<span style={{ fontSize: 10, fontWeight: 400, color: "#aaa" }}>k</span></span>
               </div>
               <button onClick={() => setLog(log.filter(e => e.id !== entry.id))}
                 style={{ border: "none", background: "none", color: "#ddd", cursor: "pointer", fontSize: 18, padding: "0 2px", lineHeight: 1 }}>×</button>
