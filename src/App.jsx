@@ -61,6 +61,7 @@ function performMonthRollup() {
 
 export default function App() {
   const [view, setView] = useState("tracker");
+  const [historyKey, setHistoryKey] = useState(0);
 
   useEffect(() => {
     performMonthRollup();
@@ -73,7 +74,7 @@ export default function App() {
         position: "sticky", top: 0, zIndex: 50,
       }}>
         {[["tracker", "📊 Tracker"], ["library", "📚 Library"], ["history", "📅 History"]].map(([key, label]) => (
-          <button key={key} onClick={() => setView(key)}
+          <button key={key} onClick={() => { setView(key); if (key === "history") setHistoryKey(k => k + 1); }}
             style={{
               flex: 1, padding: "13px 0", border: "none", cursor: "pointer",
               fontSize: 12, fontWeight: 700, background: "transparent",
@@ -87,7 +88,7 @@ export default function App() {
 
       <div style={{ display: view === "tracker" ? undefined : "none" }}><MacroTracker /></div>
       <div style={{ display: view === "library" ? undefined : "none" }}><FoodLibrary /></div>
-      <div style={{ display: view === "history" ? undefined : "none" }}><HistoryView /></div>
+      <div style={{ display: view === "history" ? undefined : "none" }}><HistoryView key={historyKey} /></div>
     </div>
   );
 }
