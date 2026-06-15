@@ -7,8 +7,8 @@ const DAY_ABBR = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 
 const TIGHT = 0.05;
 const LOOSE = 0.10;
-const GYM_TARGETS  = { cal: 2850, p: 180, c: 340, f: 94 };
-const REST_TARGETS = { cal: 2550, p: 180, c: 255, f: 85 };
+const GYM_TARGETS  = { cal: 2500, p: 180, c: 270, f: 83 };
+const REST_TARGETS = { cal: 2200, p: 180, c: 210, f: 73 };
 const MC = { p: "#3b82f6", c: "#b45309", f: "#059669" };
 
 function statusColor(val, tgt) {

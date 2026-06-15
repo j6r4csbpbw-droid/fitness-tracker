@@ -92,8 +92,8 @@ function runMacroMigrationV1() {
 runMacroMigrationV1();
 
 const TARGETS = {
-  gym:  { cal: 2850, p: 180, c: 340, f: 94 },
-  rest: { cal: 2550, p: 180, c: 255, f: 85 },
+  gym:  { cal: 2500, p: 180, c: 270, f: 83 },
+  rest: { cal: 2200, p: 180, c: 210, f: 73 },
 };
 
 const FOODS = [
