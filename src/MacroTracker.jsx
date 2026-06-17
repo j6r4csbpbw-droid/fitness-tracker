@@ -91,6 +91,55 @@ function runMacroMigrationV1() {
 
 runMacroMigrationV1();
 
+function runMacroMigrationV2() {
+  if (localStorage.getItem("macro_migration_v2") === "done") return;
+  const keys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith("day_")) keys.push(k);
+  }
+  for (const key of keys) {
+    try {
+      const day = JSON.parse(localStorage.getItem(key));
+      if (!day || !Array.isArray(day.entries)) continue;
+      let changed = false;
+      for (const entry of day.entries) {
+        const n = entry.food?.name ?? "";
+        if (!n.includes("Pizza Union") && !n.includes("Pizza — gourmet") && !n.includes("Pizza —")) continue;
+        entry.food.name = "Pizza (whole 12\")";
+        entry.food.cal  = 1500;
+        entry.food.p    = 65;
+        entry.food.c    = 155;
+        entry.food.f    = 60;
+        const mult = entry.food.unit === "serving" ? entry.qty : entry.qty / 100;
+        entry.macros = {
+          cal: Math.round(1500 * mult * 10) / 10,
+          p:   Math.round(65   * mult * 10) / 10,
+          c:   Math.round(155  * mult * 10) / 10,
+          f:   Math.round(60   * mult * 10) / 10,
+        };
+        changed = true;
+      }
+      if (!changed) continue;
+      day.totals = {
+        cal: day.entries.reduce((a, e) => a + e.macros.cal, 0),
+        p:   day.entries.reduce((a, e) => a + e.macros.p,   0),
+        c:   day.entries.reduce((a, e) => a + e.macros.c,   0),
+        f:   day.entries.reduce((a, e) => a + e.macros.f,   0),
+      };
+      const t = day.targets;
+      day.score = [
+        [day.totals.cal, t.cal], [day.totals.p, t.p],
+        [day.totals.c,   t.c],   [day.totals.f, t.f],
+      ].filter(([v, tgt]) => Math.abs(v / tgt - 1) <= 0.05).length;
+      localStorage.setItem(key, JSON.stringify(day));
+    } catch { /* skip malformed entries */ }
+  }
+  localStorage.setItem("macro_migration_v2", "done");
+}
+
+runMacroMigrationV2();
+
 const TARGETS = {
   gym:  { cal: 2500, p: 180, c: 270, f: 83 },
   rest: { cal: 2200, p: 180, c: 210, f: 73 },
@@ -178,7 +227,7 @@ const FOODS = [
   { cat: "Meals", name: "Assenhaims — chicken meal large", cal: 850, p: 65, c: 72, f: 28, unit: "serving", servingG: 1 },
   { cat: "Meals", name: "Mediterranean chicken rice box", cal: 510, p: 47, c: 60, f: 8, unit: "serving", servingG: 1 },
   { cat: "Meals", name: "Mediterranean chicken wrap", cal: 480, p: 32, c: 42, f: 18, unit: "serving", servingG: 1 },
-  { cat: "Meals", name: "Pizza Union — pepperoni (whole 12\")", cal: 980, p: 42, c: 100, f: 42, unit: "serving", servingG: 1 },
+  { cat: "Meals", name: "Pizza (whole 12\")", cal: 1500, p: 65, c: 155, f: 60, unit: "serving", servingG: 1 },
   { cat: "Meals", name: "Roast & Greens — chicken box large", cal: 620, p: 48, c: 38, f: 28, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "Beer — ale (pint)", cal: 196, p: 1.5, c: 15, f: 0, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "Beer — stout (pint)", cal: 210, p: 2, c: 18, f: 0, unit: "serving", servingG: 1 },
