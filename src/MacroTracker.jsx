@@ -274,6 +274,7 @@ const FOODS = [
   { cat: "Condiments", name: "Sesame oil (per tbsp)", cal: 119, p: 0, c: 0, f: 13.5, unit: "serving", servingG: 15 },
   { cat: "Condiments", name: "Soy sauce — light (per tbsp)", cal: 8, p: 1.2, c: 0.8, f: 0, unit: "serving", servingG: 15 },
   { cat: "Meals", name: "Assenhaims — chicken meal large", cal: 850, p: 65, c: 72, f: 28, unit: "serving", servingG: 1 },
+  { cat: "Meals", name: "McDonald's sausage & egg McMuffin", cal: 430, p: 26, c: 29, f: 34, unit: "serving", servingG: 1 },
   { cat: "Meals", name: "Mediterranean chicken rice box", cal: 510, p: 47, c: 60, f: 8, unit: "serving", servingG: 1 },
   { cat: "Meals", name: "Mediterranean chicken wrap", cal: 480, p: 32, c: 42, f: 18, unit: "serving", servingG: 1 },
   { cat: "Meals", name: "Pizza (whole 12\")", cal: 1500, p: 65, c: 155, f: 60, unit: "serving", servingG: 1 },
