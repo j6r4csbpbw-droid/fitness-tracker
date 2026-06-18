@@ -140,6 +140,54 @@ function runMacroMigrationV2() {
 
 runMacroMigrationV2();
 
+function runMacroMigrationV3() {
+  if (localStorage.getItem("macro_migration_v3") === "done") return;
+  const keys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith("day_")) keys.push(k);
+  }
+  for (const key of keys) {
+    try {
+      const day = JSON.parse(localStorage.getItem(key));
+      if (!day || !Array.isArray(day.entries)) continue;
+      let changed = false;
+      for (const entry of day.entries) {
+        if (entry.food?.name !== "Fried chicken — per piece (~150g)") continue;
+        entry.food.name = "Fried chicken — per piece (KFC avg)";
+        entry.food.cal  = 320;
+        entry.food.p    = 28;
+        entry.food.c    = 8;
+        entry.food.f    = 19;
+        const mult = entry.food.unit === "serving" ? entry.qty : entry.qty / 100;
+        entry.macros = {
+          cal: Math.round(320 * mult * 10) / 10,
+          p:   Math.round(28  * mult * 10) / 10,
+          c:   Math.round(8   * mult * 10) / 10,
+          f:   Math.round(19  * mult * 10) / 10,
+        };
+        changed = true;
+      }
+      if (!changed) continue;
+      day.totals = {
+        cal: day.entries.reduce((a, e) => a + e.macros.cal, 0),
+        p:   day.entries.reduce((a, e) => a + e.macros.p,   0),
+        c:   day.entries.reduce((a, e) => a + e.macros.c,   0),
+        f:   day.entries.reduce((a, e) => a + e.macros.f,   0),
+      };
+      const t = day.targets;
+      day.score = [
+        [day.totals.cal, t.cal], [day.totals.p, t.p],
+        [day.totals.c,   t.c],   [day.totals.f, t.f],
+      ].filter(([v, tgt]) => Math.abs(v / tgt - 1) <= 0.05).length;
+      localStorage.setItem(key, JSON.stringify(day));
+    } catch { /* skip malformed entries */ }
+  }
+  localStorage.setItem("macro_migration_v3", "done");
+}
+
+runMacroMigrationV3();
+
 const TARGETS = {
   gym:  { cal: 2500, p: 180, c: 270, f: 83 },
   rest: { cal: 2200, p: 180, c: 210, f: 73 },
@@ -192,6 +240,7 @@ const FOODS = [
   { cat: "Produce", name: "Red cabbage", cal: 31, p: 1.4, c: 7, f: 0.2, unit: "g" },
   { cat: "Produce", name: "Spinach — raw", cal: 23, p: 2.9, c: 3.6, f: 0.4, unit: "g" },
   { cat: "Produce", name: "Sweet potato (1 medium)", cal: 112, p: 2.1, c: 26, f: 0.13, unit: "serving", servingG: 130 },
+  { cat: "Produce", name: "Tofu", cal: 66, p: 6.5, c: 2, f: 3.5, unit: "g" },
   { cat: "Produce", name: "Tomatoes — canned", cal: 16, p: 1, c: 3, f: 0.2, unit: "g" },
   { cat: "Produce", name: "Tomatoes — whole", cal: 18, p: 0.9, c: 3.5, f: 0.2, unit: "g" },
   { cat: "Dairy", name: "Cheese — Cheddar", cal: 403, p: 25, c: 0.1, f: 34, unit: "g" },
@@ -233,7 +282,7 @@ const FOODS = [
   { cat: "Dirty", name: "Beer — stout (pint)", cal: 210, p: 2, c: 18, f: 0, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "Double beef burger", cal: 720, p: 42, c: 38, f: 44, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "Fish & chips", cal: 1240, p: 58, c: 128, f: 52, unit: "serving", servingG: 1 },
-  { cat: "Dirty", name: "Fried chicken — per piece (~150g)", cal: 435, p: 33, c: 18, f: 26, unit: "serving", servingG: 150 },
+  { cat: "Dirty", name: "Fried chicken — per piece (KFC avg)", cal: 320, p: 28, c: 8, f: 19, unit: "serving", servingG: 150 },
   { cat: "Dirty", name: "Gin (44ml shot)", cal: 97, p: 0, c: 0, f: 0, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "Ice cream — per scoop (~100g)", cal: 207, p: 3.5, c: 24, f: 11, unit: "serving", servingG: 100 },
   { cat: "Dirty", name: "Pizza — per slice (~120g)", cal: 330, p: 13, c: 40, f: 13, unit: "serving", servingG: 120 },
