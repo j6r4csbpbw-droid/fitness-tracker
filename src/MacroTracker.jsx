@@ -279,6 +279,7 @@ const FOODS = [
   { cat: "Meals", name: "Mediterranean chicken wrap", cal: 480, p: 32, c: 42, f: 18, unit: "serving", servingG: 1 },
   { cat: "Meals", name: "Pizza (whole 12\")", cal: 1500, p: 65, c: 155, f: 60, unit: "serving", servingG: 1 },
   { cat: "Meals", name: "Roast & Greens — chicken box large", cal: 620, p: 48, c: 38, f: 28, unit: "serving", servingG: 1 },
+  { cat: "Meals", name: "Sandwich Sandwich — chicken", cal: 680, p: 38, c: 55, f: 27, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "Beer — ale (pint)", cal: 196, p: 1.5, c: 15, f: 0, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "Beer — stout (pint)", cal: 210, p: 2, c: 18, f: 0, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "Double beef burger", cal: 720, p: 42, c: 38, f: 44, unit: "serving", servingG: 1 },
