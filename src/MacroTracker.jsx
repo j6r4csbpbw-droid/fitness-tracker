@@ -360,10 +360,6 @@ function StackBar({ totals, target }) {
   const pPct = Math.min((totals.p * 4 / target.cal) * 100, 100);
   const cPct = Math.min((totals.c * 4 / target.cal) * 100, 100);
   const fPct = Math.min((totals.f * 9 / target.cal) * 100, 100);
-  const used = Math.min((totals.cal / target.cal) * 100, 100);
-  const calStatus = getStatus(totals.cal, target.cal);
-  const barColor = totals.cal === 0 ? "#555" : STATUS_COLOR[calStatus];
-  const rem = target.cal - totals.cal;
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
@@ -373,26 +369,12 @@ function StackBar({ totals, target }) {
           </span>
           <span style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginLeft: 4 }}>/ {target.cal} kcal</span>
         </div>
-        <span style={{ color: "#22c55e", fontWeight: 600, fontSize: 12 }}>
-          {totals.cal === 0 ? `${target.cal} remaining` :
-           calStatus === "hit" ? "✓ On target" :
-           calStatus === "over" ? `+${Math.round(totals.cal - target.cal)} over` :
-           `${Math.round(rem)} remaining`}
-        </span>
       </div>
       <div style={{ background: "rgba(255,255,255,0.12)", borderRadius: 6, height: 12, overflow: "hidden", position: "relative" }}>
         <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: `${pPct}%`, background: C.p }} />
         <div style={{ position: "absolute", left: `${pPct}%`, top: 0, height: "100%", width: `${cPct}%`, background: C.c }} />
         <div style={{ position: "absolute", left: `${pPct+cPct}%`, top: 0, height: "100%", width: `${fPct}%`, background: C.f }} />
         <div style={{ position: "absolute", left: `${Math.min((1/(1+TIGHT))*100,100)}%`, top: 0, height: "100%", width: 2, background: "rgba(255,255,255,0.4)" }} />
-      </div>
-      <div style={{ display: "flex", gap: 8, marginTop: 8, alignItems: "center" }}>
-        {[["P", totals.p, target.p], ["C", totals.c, target.c], ["F", totals.f, target.f]].map(([l, val, tgt]) => (
-          <span key={l} style={{ background: "rgba(255,255,255,0.15)", color: "#fff", padding: "4px 11px", borderRadius: 20, fontSize: 12, fontWeight: 600 }}>
-            {l} {Math.round(val)}<span style={{ fontWeight: 400, opacity: 0.6 }}>/{tgt}g</span>
-          </span>
-        ))}
-        <span style={{ marginLeft: "auto", color: "rgba(255,255,255,0.35)", fontSize: 11 }}>{Math.round(used)}%</span>
       </div>
     </div>
   );
@@ -778,16 +760,16 @@ export default function MacroTracker() {
           {log.map(entry => (
             <div key={entry.id} style={{ padding: "10px 14px", borderTop: "1px solid #f5f5f5", display: "flex", alignItems: "center", flexWrap: "nowrap", gap: 10 }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{entry.food.name}</div>
+                <div style={{ fontSize: 13, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flex: 1, minWidth: 0 }}>{entry.food.name}</div>
                 <div style={{ fontSize: 11, color: "#aaa", marginTop: 1 }}>
                   {entry.food.unit === "serving" ? `${entry.qty} serving${entry.qty !== 1 ? "s" : ""}` : `${entry.qty}g`}
                 </div>
               </div>
-              <div style={{ display: "flex", gap: 5, fontSize: 11, alignItems: "center", flexShrink: 0 }}>
-                <span style={{ background: "#f0f7ff", color: C.p, padding: "2px 6px", borderRadius: 6, fontWeight: 600, width: 50, textAlign: "center", flexShrink: 0 }}>{entry.macros.p}p</span>
-                <span style={{ background: "#fffbeb", color: "#b45309", padding: "2px 6px", borderRadius: 6, fontWeight: 600, width: 50, textAlign: "center", flexShrink: 0 }}>{entry.macros.c}c</span>
-                <span style={{ background: "#f0fdf4", color: "#059669", padding: "2px 6px", borderRadius: 6, fontWeight: 600, width: 50, textAlign: "center", flexShrink: 0 }}>{entry.macros.f}f</span>
-                <span style={{ color: "#555", fontWeight: 700, fontSize: 12, width: 46, textAlign: "right", flexShrink: 0 }}>{entry.macros.cal}<span style={{ fontSize: 10, fontWeight: 400, color: "#aaa" }}>k</span></span>
+              <div style={{ display: "flex", gap: 4, fontSize: 11, alignItems: "center", flexShrink: 0 }}>
+                <span style={{ background: "#f0f7ff", color: C.p, padding: "2px 6px", borderRadius: 6, fontWeight: 600, width: "auto", flexShrink: 0 }}>{entry.macros.p}p</span>
+                <span style={{ background: "#fffbeb", color: "#b45309", padding: "2px 6px", borderRadius: 6, fontWeight: 600, width: "auto", flexShrink: 0 }}>{entry.macros.c}c</span>
+                <span style={{ background: "#f0fdf4", color: "#059669", padding: "2px 6px", borderRadius: 6, fontWeight: 600, width: "auto", flexShrink: 0 }}>{entry.macros.f}f</span>
+                <span style={{ color: "#555", fontWeight: 700, fontSize: 12, minWidth: 38, textAlign: "right", flexShrink: 0 }}>{entry.macros.cal}<span style={{ fontSize: 10, fontWeight: 400, color: "#aaa" }}>k</span></span>
               </div>
               <button onClick={() => setLog(log.filter(e => e.id !== entry.id))}
                 style={{ border: "none", background: "none", color: "#ddd", cursor: "pointer", fontSize: 18, padding: "0 2px", lineHeight: 1 }}>×</button>
