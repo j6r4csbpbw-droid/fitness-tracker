@@ -313,18 +313,16 @@ function calcMacros(food, qty) {
   };
 }
 
-const TIGHT = 0.05;  // ±5% = green
-const LOOSE = 0.10;  // ±10% = yellow, beyond = red
+const TIGHT = 0.10;  // ±10% = green, beyond = red
 
 function getStatus(val, target) {
   const ratio = val / target;
   const dev = Math.abs(ratio - 1);
-  if (dev <= TIGHT) return "hit";
-  if (dev <= LOOSE) return "warn";
+  if (dev <= 0.10) return "hit";
   return "over";
 }
 
-const STATUS_COLOR = { hit: "#22c55e", warn: "#f59e0b", over: "#ef4444" };
+const STATUS_COLOR = { hit: "#22c55e", over: "#ef4444" };
 
 function MacroRing({ val, target, label, unit = "g" }) {
   const pct = Math.min(val / target, 1);
@@ -516,9 +514,6 @@ function SummaryCard({ totals, target, onReset, onEdit, onClearAll }) {
       <div style={{ background: "#fafaf9", borderBottom: "0.5px solid #e5e5e5", borderRadius: "12px 12px 0 0", padding: "16px 16px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <div style={{ fontSize: 11, color: "#9a9a9a", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" }}>Day Complete</div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: "#1a1a1a", marginTop: 2 }}>
-            {score === 4 ? "🎯 Perfect day" : score >= 3 ? "💪 Strong day" : score >= 2 ? "📊 Decent day" : "📉 Off today"}
-          </div>
         </div>
         <div style={{ textAlign: "right" }}>
           <div style={{ fontSize: 32, fontWeight: 900, color: "#1a1a1a", lineHeight: 1 }}>{score}<span style={{ fontSize: 16, color: "#aaa" }}>/4</span></div>
@@ -544,7 +539,7 @@ function SummaryCard({ totals, target, onReset, onEdit, onClearAll }) {
                   <span style={{ fontSize: 11, color: "#bbb" }}>/ {tgt}{unit}</span>
                   <span style={{
                     fontSize: 11, fontWeight: 700, padding: "2px 7px", borderRadius: 20,
-                    background: s === "hit" ? "#f0fdf4" : s === "warn" ? "#fffbeb" : "#fef2f2",
+                    background: s === "hit" ? "#f0fdf4" : "#fef2f2",
                     color: col
                   }}>
                     {s === "hit" ? "✓ Hit" : `${diff > 0 ? "+" : ""}${Math.round(diff)}${unit}`}
