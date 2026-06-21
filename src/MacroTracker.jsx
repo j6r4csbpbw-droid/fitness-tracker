@@ -188,6 +188,32 @@ function runMacroMigrationV3() {
 
 runMacroMigrationV3();
 
+function runMacroMigrationV4() {
+  if (localStorage.getItem("macro_migration_v4") === "done") return;
+  const keys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith("day_")) keys.push(k);
+  }
+  for (const key of keys) {
+    try {
+      const day = JSON.parse(localStorage.getItem(key));
+      if (!day) continue;
+      day.targets = day.isGym
+        ? { cal: 2500, p: 180, c: 270, f: 83 }
+        : { cal: 2200, p: 180, c: 210, f: 73 };
+      const t = day.targets;
+      day.score = ["cal", "p", "c", "f"].filter(
+        m => Math.abs(day.totals[m] / t[m] - 1) <= 0.10
+      ).length;
+      localStorage.setItem(key, JSON.stringify(day));
+    } catch { /* skip malformed entries */ }
+  }
+  localStorage.setItem("macro_migration_v4", "done");
+}
+
+runMacroMigrationV4();
+
 const TARGETS = {
   gym:  { cal: 2500, p: 180, c: 270, f: 83 },
   rest: { cal: 2200, p: 180, c: 210, f: 73 },
