@@ -240,6 +240,65 @@ function runMacroMigrationV5() {
 
 runMacroMigrationV5();
 
+function runMacroMigrationV6() {
+  if (localStorage.getItem("macro_migration_v6") === "done") return;
+
+  function getStatus(val, target) {
+    return Math.abs(val / target - 1) <= 0.10 ? "hit" : "over";
+  }
+
+  // month_ keys
+  const monthKeys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith("month_")) monthKeys.push(k);
+  }
+  for (const key of monthKeys) {
+    try {
+      const entry = JSON.parse(localStorage.getItem(key));
+      if (!entry) continue;
+      if (entry.targets && (entry.targets.cal === 2850 || entry.targets.cal === 2550)) {
+        entry.targets = { cal: 2500, p: 180, c: 270, f: 83 };
+      }
+      const tCal = entry.targets?.cal ?? 2500;
+      const hits = [
+        getStatus(entry.avgCal, tCal),
+        getStatus(entry.avgP, 180),
+        getStatus(entry.avgCal, tCal),
+        (entry.avgF >= 40 && entry.avgF <= 83) ? "hit" : "over",
+      ];
+      entry.score = hits.filter(s => s === "hit").length;
+      localStorage.setItem(key, JSON.stringify(entry));
+    } catch { /* skip malformed entries */ }
+  }
+
+  // day_ keys
+  const dayKeys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith("day_")) dayKeys.push(k);
+  }
+  for (const key of dayKeys) {
+    try {
+      const day = JSON.parse(localStorage.getItem(key));
+      if (!day || !day.totals || !day.targets) continue;
+      const fatMax = day.isGym ? 83 : 73;
+      const hits = [
+        getStatus(day.totals.cal, day.targets.cal),
+        getStatus(day.totals.p, 180),
+        getStatus(day.totals.cal, day.targets.cal),
+        (day.totals.f >= 40 && day.totals.f <= fatMax) ? "hit" : "over",
+      ];
+      day.score = hits.filter(s => s === "hit").length;
+      localStorage.setItem(key, JSON.stringify(day));
+    } catch { /* skip malformed entries */ }
+  }
+
+  localStorage.setItem("macro_migration_v6", "done");
+}
+
+runMacroMigrationV6();
+
 const TARGETS = {
   gym:  { cal: 2500, p: 180, c: 270, f: 83 },
   rest: { cal: 2200, p: 180, c: 210, f: 73 },
