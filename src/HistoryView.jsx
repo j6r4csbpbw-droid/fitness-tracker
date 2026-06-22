@@ -11,6 +11,19 @@ const GYM_TARGETS  = { cal: 2500, p: 180, c: 270, f: 83 };
 const REST_TARGETS = { cal: 2200, p: 180, c: 210, f: 73 };
 const MC = { p: "#3b82f6", c: "#b45309", f: "#059669" };
 
+function getStatus(val, target) {
+  const dev = Math.abs(val / target - 1);
+  return dev <= 0.10 ? "hit" : "over";
+}
+
+function getFatStatus(fatVal, isGym) {
+  const fatMax = isGym ? 83 : 73;
+  if (fatVal >= 40 && fatVal <= fatMax) return "hit";
+  return "over";
+}
+
+const STATUS_COLOR = { hit: "#22c55e", over: "#ef4444" };
+
 function statusColor(val, tgt) {
   if (!tgt) return "#22c55e";
   const dev = Math.abs(val / tgt - 1);
@@ -124,7 +137,9 @@ function TargetBlock({ label, targets, borderBottom }) {
 
 function DayRow({ dateStr, data, onEdit, onDelete }) {
   const { isGym, targets, totals } = data;
-  const calColor = statusColor(Math.round(totals.cal), targets.cal);
+  const calColor = STATUS_COLOR[getStatus(totals.cal, targets.cal)];
+  const pColor   = STATUS_COLOR[getStatus(totals.p, targets.p)];
+  const fColor   = STATUS_COLOR[getFatStatus(totals.f, isGym)];
   return (
     <div style={{ padding: "8px 12px", background: "#fff", borderBottom: "0.5px solid #f0f0f0" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
@@ -150,9 +165,9 @@ function DayRow({ dateStr, data, onEdit, onDelete }) {
         <span style={{ fontSize: 12, fontWeight: 600, color: calColor }}>
           {Math.round(totals.cal)}/{targets.cal} kcal
         </span>
-        <span style={{ fontSize: 12, fontWeight: 600, color: MC.p }}>P {Math.round(totals.p)}g</span>
-        <span style={{ fontSize: 12, fontWeight: 600, color: MC.c }}>C {Math.round(totals.c)}g</span>
-        <span style={{ fontSize: 12, fontWeight: 600, color: MC.f }}>F {Math.round(totals.f)}g</span>
+        <span style={{ fontSize: 12, fontWeight: 600, color: pColor }}>P {Math.round(totals.p)}g</span>
+        <span style={{ fontSize: 12, fontWeight: 600, color: calColor }}>C {Math.round(totals.c)}g</span>
+        <span style={{ fontSize: 12, fontWeight: 600, color: fColor }}>F {Math.round(totals.f)}g</span>
       </div>
     </div>
   );
