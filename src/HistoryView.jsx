@@ -162,12 +162,12 @@ function DayRow({ dateStr, data, onEdit, onDelete }) {
         </div>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-        <span style={{ fontSize: 12, fontWeight: 600, color: calColor }}>
+        <span style={{ fontSize: 12, fontWeight: 600, color: calColor, minWidth: 75, textAlign: "right", flexShrink: 0 }}>
           {Math.round(totals.cal)}/{targets.cal} kcal
         </span>
-        <span style={{ fontSize: 12, fontWeight: 600, color: pColor }}>P {Math.round(totals.p)}g</span>
-        <span style={{ fontSize: 12, fontWeight: 600, color: calColor }}>C {Math.round(totals.c)}g</span>
-        <span style={{ fontSize: 12, fontWeight: 600, color: fColor }}>F {Math.round(totals.f)}g</span>
+        <span style={{ fontSize: 12, fontWeight: 600, color: pColor, minWidth: 52, textAlign: "right", flexShrink: 0 }}>P {Math.round(totals.p)}g</span>
+        <span style={{ fontSize: 12, fontWeight: 600, color: calColor, minWidth: 52, textAlign: "right", flexShrink: 0 }}>C {Math.round(totals.c)}g</span>
+        <span style={{ fontSize: 12, fontWeight: 600, color: fColor, minWidth: 52, textAlign: "right", flexShrink: 0 }}>F {Math.round(totals.f)}g</span>
       </div>
     </div>
   );
