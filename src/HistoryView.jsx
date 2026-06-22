@@ -185,12 +185,19 @@ function EditDayModal({ dateStr, dayData, onSave, onClose }) {
     f:   entries.reduce((a, e) => a + e.macros.f, 0),
   };
 
+  const tgt = isGym ? GYM_TARGETS : REST_TARGETS;
+  const dCalColor = STATUS_COLOR[getStatus(totals.cal, tgt.cal)];
+  const dPColor   = STATUS_COLOR[getStatus(totals.p, tgt.p)];
+  const dFColor   = STATUS_COLOR[getFatStatus(totals.f, isGym)];
+  const liveScore = [
+    getStatus(totals.cal, tgt.cal),
+    getStatus(totals.p, tgt.p),
+    getStatus(totals.cal, tgt.cal),
+    getFatStatus(totals.f, isGym),
+  ].filter(s => s === "hit").length;
+
   function handleSave() {
-    const tgt = isGym ? GYM_TARGETS : REST_TARGETS;
-    const score = [
-      [totals.cal, tgt.cal], [totals.p, tgt.p], [totals.c, tgt.c], [totals.f, tgt.f],
-    ].filter(([v, t]) => Math.abs(v / t - 1) <= TIGHT).length;
-    const updated = { ...dayData, isGym, targets: tgt, totals, score, entries };
+    const updated = { ...dayData, isGym, targets: tgt, totals, score: liveScore, entries };
     localStorage.setItem(`day_${dateStr}`, JSON.stringify(updated));
     onSave(updated);
     onClose();
@@ -226,12 +233,13 @@ function EditDayModal({ dateStr, dayData, onSave, onClose }) {
           </div>
 
           <div style={{ display: "flex", gap: 10, marginBottom: 12, padding: "8px 10px", background: "#f8f8f8", borderRadius: 8, flexShrink: 0 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: statusColor(Math.round(totals.cal), (isGym ? GYM_TARGETS : REST_TARGETS).cal) }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: dCalColor }}>
               {Math.round(totals.cal)} kcal
             </span>
-            <span style={{ fontSize: 12, fontWeight: 600, color: MC.p }}>P {Math.round(totals.p)}g</span>
-            <span style={{ fontSize: 12, fontWeight: 600, color: MC.c }}>C {Math.round(totals.c)}g</span>
-            <span style={{ fontSize: 12, fontWeight: 600, color: MC.f }}>F {Math.round(totals.f)}g</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: dPColor }}>P {Math.round(totals.p)}g</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: dCalColor }}>C {Math.round(totals.c)}g</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: dFColor }}>F {Math.round(totals.f)}g</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: "#888" }}>{liveScore}/4</span>
           </div>
 
           <div style={{ flex: 1, overflowY: "auto", minHeight: 0, marginBottom: 12 }}>
