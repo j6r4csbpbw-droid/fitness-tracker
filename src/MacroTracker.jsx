@@ -368,6 +368,72 @@ function runMacroMigrationV7() {
 
 runMacroMigrationV7();
 
+function runMacroMigrationV8() {
+  if (localStorage.getItem("macro_migration_v8") === "done") return;
+
+  function getStatus(val, target) {
+    return Math.abs(val / target - 1) <= 0.10 ? "hit" : "over";
+  }
+
+  const NEW_MACROS = {
+    "Chicken Drumstick — Skinless": { cal: 91,  p: 18, c: 0, f: 2.8  },
+    "Chicken Drumstick — Skin-On":  { cal: 123, p: 13, c: 0, f: 7.7  },
+    "Chicken Leg — Skinless":       { cal: 115, p: 15, c: 0, f: 4.4  },
+    "Chicken Leg — Skin-On":        { cal: 157, p: 13, c: 0, f: 10.2 },
+  };
+
+  const dayKeys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith("day_")) dayKeys.push(k);
+  }
+
+  for (const key of dayKeys) {
+    try {
+      const day = JSON.parse(localStorage.getItem(key));
+      if (!day || !Array.isArray(day.entries)) continue;
+      let changed = false;
+
+      for (const entry of day.entries) {
+        const nm = NEW_MACROS[entry.food?.name];
+        if (!nm) continue;
+        const mult = entry.food.unit === "serving" ? entry.qty : entry.qty / 100;
+        entry.food.cal = nm.cal; entry.food.p = nm.p; entry.food.c = nm.c; entry.food.f = nm.f;
+        entry.macros = {
+          cal: Math.round(nm.cal * mult * 10) / 10,
+          p:   Math.round(nm.p   * mult * 10) / 10,
+          c:   0,
+          f:   Math.round(nm.f   * mult * 10) / 10,
+        };
+        changed = true;
+      }
+
+      if (!changed) continue;
+
+      day.totals = {
+        cal: day.entries.reduce((a, e) => a + e.macros.cal, 0),
+        p:   day.entries.reduce((a, e) => a + e.macros.p,   0),
+        c:   day.entries.reduce((a, e) => a + e.macros.c,   0),
+        f:   day.entries.reduce((a, e) => a + e.macros.f,   0),
+      };
+
+      const fatMax = day.isGym ? 83 : 73;
+      day.score = [
+        getStatus(day.totals.cal, day.targets.cal),
+        getStatus(day.totals.p,   180),
+        getStatus(day.totals.cal, day.targets.cal),
+        (day.totals.f >= 40 && day.totals.f <= fatMax) ? "hit" : "over",
+      ].filter(s => s === "hit").length;
+
+      localStorage.setItem(key, JSON.stringify(day));
+    } catch { /* skip malformed entries */ }
+  }
+
+  localStorage.setItem("macro_migration_v8", "done");
+}
+
+runMacroMigrationV8();
+
 const TARGETS = {
   gym:  { cal: 2500, p: 180, c: 270, f: 83 },
   rest: { cal: 2200, p: 180, c: 210, f: 73 },
@@ -377,10 +443,10 @@ const FOODS = [
   { cat: "Meat", name: "Beef mince — 20% fat", cal: 196, p: 17, c: 0, f: 14, unit: "g" },
   { cat: "Meat", name: "Beef mince — 5% fat", cal: 128, p: 20, c: 0, f: 5, unit: "g" },
   { cat: "Meat", name: "Chicken breast — skinless", cal: 120, p: 23, c: 0, f: 2, unit: "g" },
-  { cat: "Meat", name: "Chicken drumstick — skin-on", cal: 175, p: 19, c: 0, f: 11, unit: "g" },
-  { cat: "Meat", name: "Chicken drumstick — skinless", cal: 130, p: 21, c: 0, f: 4, unit: "g" },
-  { cat: "Meat", name: "Chicken leg — skin-on", cal: 215, p: 18, c: 0, f: 14, unit: "g" },
-  { cat: "Meat", name: "Chicken leg — skinless", cal: 158, p: 20, c: 0, f: 6, unit: "g" },
+  { cat: "Meat", name: "Chicken Drumstick — Skin-On", cal: 123, p: 13, c: 0, f: 7.7, unit: "g" },
+  { cat: "Meat", name: "Chicken Drumstick — Skinless", cal: 91, p: 18, c: 0, f: 2.8, unit: "g" },
+  { cat: "Meat", name: "Chicken Leg — Skin-On", cal: 157, p: 13, c: 0, f: 10.2, unit: "g" },
+  { cat: "Meat", name: "Chicken Leg — Skinless", cal: 115, p: 15, c: 0, f: 4.4, unit: "g" },
   { cat: "Meat", name: "Chicken Thigh — Skin-On", cal: 156, p: 15, c: 0, f: 11.5, unit: "g" },
   { cat: "Meat", name: "Chicken Thigh — Skinless", cal: 119, p: 16, c: 0, f: 5.7, unit: "g" },
   { cat: "Meat", name: "Lamb chops", cal: 218, p: 22, c: 0, f: 14, unit: "g" },
