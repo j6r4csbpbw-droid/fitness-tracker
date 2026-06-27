@@ -299,6 +299,75 @@ function runMacroMigrationV6() {
 
 runMacroMigrationV6();
 
+function runMacroMigrationV7() {
+  if (localStorage.getItem("macro_migration_v7") === "done") return;
+
+  function getStatus(val, target) {
+    return Math.abs(val / target - 1) <= 0.10 ? "hit" : "over";
+  }
+
+  const dayKeys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith("day_")) dayKeys.push(k);
+  }
+
+  for (const key of dayKeys) {
+    try {
+      const day = JSON.parse(localStorage.getItem(key));
+      if (!day || !Array.isArray(day.entries)) continue;
+      let changed = false;
+
+      for (const entry of day.entries) {
+        if (entry.food?.name === "Chicken Thigh — Skinless") {
+          const mult = entry.qty / 100;
+          entry.food.cal = 119; entry.food.p = 16; entry.food.c = 0; entry.food.f = 5.7;
+          entry.macros = {
+            cal: Math.round(119 * mult * 10) / 10,
+            p:   Math.round(16  * mult * 10) / 10,
+            c:   0,
+            f:   Math.round(5.7 * mult * 10) / 10,
+          };
+          changed = true;
+        } else if (entry.food?.name === "Chicken Thigh — Skin-On") {
+          const mult = entry.qty / 100;
+          entry.food.cal = 156; entry.food.p = 15; entry.food.c = 0; entry.food.f = 11.5;
+          entry.macros = {
+            cal: Math.round(156  * mult * 10) / 10,
+            p:   Math.round(15   * mult * 10) / 10,
+            c:   0,
+            f:   Math.round(11.5 * mult * 10) / 10,
+          };
+          changed = true;
+        }
+      }
+
+      if (!changed) continue;
+
+      day.totals = {
+        cal: day.entries.reduce((a, e) => a + e.macros.cal, 0),
+        p:   day.entries.reduce((a, e) => a + e.macros.p,   0),
+        c:   day.entries.reduce((a, e) => a + e.macros.c,   0),
+        f:   day.entries.reduce((a, e) => a + e.macros.f,   0),
+      };
+
+      const fatMax = day.isGym ? 83 : 73;
+      day.score = [
+        getStatus(day.totals.cal, day.targets.cal),
+        getStatus(day.totals.p,   180),
+        getStatus(day.totals.cal, day.targets.cal),
+        (day.totals.f >= 40 && day.totals.f <= fatMax) ? "hit" : "over",
+      ].filter(s => s === "hit").length;
+
+      localStorage.setItem(key, JSON.stringify(day));
+    } catch { /* skip malformed entries */ }
+  }
+
+  localStorage.setItem("macro_migration_v7", "done");
+}
+
+runMacroMigrationV7();
+
 const TARGETS = {
   gym:  { cal: 2500, p: 180, c: 270, f: 83 },
   rest: { cal: 2200, p: 180, c: 210, f: 73 },
@@ -312,8 +381,8 @@ const FOODS = [
   { cat: "Meat", name: "Chicken drumstick — skinless", cal: 130, p: 21, c: 0, f: 4, unit: "g" },
   { cat: "Meat", name: "Chicken leg — skin-on", cal: 215, p: 18, c: 0, f: 14, unit: "g" },
   { cat: "Meat", name: "Chicken leg — skinless", cal: 158, p: 20, c: 0, f: 6, unit: "g" },
-  { cat: "Meat", name: "Chicken thigh — skin-on", cal: 190, p: 18, c: 0, f: 14, unit: "g" },
-  { cat: "Meat", name: "Chicken thigh — skinless", cal: 145, p: 19, c: 0, f: 7, unit: "g" },
+  { cat: "Meat", name: "Chicken Thigh — Skin-On", cal: 156, p: 15, c: 0, f: 11.5, unit: "g" },
+  { cat: "Meat", name: "Chicken Thigh — Skinless", cal: 119, p: 16, c: 0, f: 5.7, unit: "g" },
   { cat: "Meat", name: "Lamb chops", cal: 218, p: 22, c: 0, f: 14, unit: "g" },
   { cat: "Meat", name: "Lamb mince — 20% fat", cal: 216, p: 16, c: 0, f: 16.5, unit: "g" },
   { cat: "Meat", name: "Pork loin — lean", cal: 133, p: 25, c: 0, f: 3.5, unit: "g" },
