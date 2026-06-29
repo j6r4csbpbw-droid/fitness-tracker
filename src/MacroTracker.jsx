@@ -480,6 +480,7 @@ const FOODS = [
   { cat: "Produce", name: "Green beans", cal: 31, p: 1.8, c: 7, f: 0.1, unit: "g" },
   { cat: "Produce", name: "Kale", cal: 49, p: 4.3, c: 9, f: 0.9, unit: "g" },
   { cat: "Produce", name: "Kidney beans — canned", cal: 100, p: 7, c: 18, f: 0.5, unit: "g" },
+  { cat: "Produce", name: "Mayo — Reduced Fat (per squeeze)", cal: 37, p: 0.1, c: 1.2, f: 3.5, unit: "serving", servingG: 1 },
   { cat: "Produce", name: "Mixed Greens", cal: 17, p: 1.5, c: 3.2, f: 0.2, unit: "g" },
   { cat: "Produce", name: "Onion (1 medium)", cal: 60, p: 1.8, c: 14, f: 0.1, unit: "serving", servingG: 150 },
   { cat: "Produce", name: "Potato", cal: 77, p: 2, c: 17.5, f: 0.1, unit: "g" },
