@@ -536,6 +536,7 @@ const FOODS = [
   { cat: "Dirty", name: "Fish & chips", cal: 1240, p: 58, c: 128, f: 52, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "Fried chicken — per piece (KFC avg)", cal: 320, p: 28, c: 8, f: 19, unit: "serving", servingG: 150 },
   { cat: "Dirty", name: "Gin (44ml shot)", cal: 97, p: 0, c: 0, f: 0, unit: "serving", servingG: 1 },
+  { cat: "Dirty", name: "Guinness Zero (440ml)", cal: 75, p: 1.3, c: 16.7, f: 0, unit: "serving", servingG: 440 },
   { cat: "Dirty", name: "Ice cream — per scoop (~100g)", cal: 207, p: 3.5, c: 24, f: 11, unit: "serving", servingG: 100 },
   { cat: "Dirty", name: "Pizza — per slice (~120g)", cal: 330, p: 13, c: 40, f: 13, unit: "serving", servingG: 120 },
   { cat: "Dirty", name: "Potato chips — standard bag (35g)", cal: 188, p: 2.5, c: 19, f: 12, unit: "serving", servingG: 35 },
