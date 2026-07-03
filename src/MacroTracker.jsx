@@ -434,6 +434,64 @@ function runMacroMigrationV8() {
 
 runMacroMigrationV8();
 
+function runMacroMigrationV9() {
+  if (localStorage.getItem("macro_migration_v9") === "done") return;
+
+  function getStatus(val, target) {
+    return Math.abs(val / target - 1) <= 0.10 ? "hit" : "over";
+  }
+
+  const dayKeys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith("day_")) dayKeys.push(k);
+  }
+
+  for (const key of dayKeys) {
+    try {
+      const day = JSON.parse(localStorage.getItem(key));
+      if (!day || !Array.isArray(day.entries)) continue;
+      let changed = false;
+
+      for (const entry of day.entries) {
+        if (entry.food?.name !== "Whey Protein") continue;
+        const mult = entry.qty;
+        entry.food.cal = 104; entry.food.p = 22; entry.food.c = 2; entry.food.f = 1.5;
+        entry.macros = {
+          cal: Math.round(104 * mult * 10) / 10,
+          p:   Math.round(22  * mult * 10) / 10,
+          c:   Math.round(2   * mult * 10) / 10,
+          f:   Math.round(1.5 * mult * 10) / 10,
+        };
+        changed = true;
+      }
+
+      if (!changed) continue;
+
+      day.totals = {
+        cal: day.entries.reduce((a, e) => a + e.macros.cal, 0),
+        p:   day.entries.reduce((a, e) => a + e.macros.p,   0),
+        c:   day.entries.reduce((a, e) => a + e.macros.c,   0),
+        f:   day.entries.reduce((a, e) => a + e.macros.f,   0),
+      };
+
+      const fatMax = day.isGym ? 83 : 73;
+      day.score = [
+        getStatus(day.totals.cal, day.targets.cal),
+        getStatus(day.totals.p,   180),
+        getStatus(day.totals.cal, day.targets.cal),
+        (day.totals.f >= 40 && day.totals.f <= fatMax) ? "hit" : "over",
+      ].filter(s => s === "hit").length;
+
+      localStorage.setItem(key, JSON.stringify(day));
+    } catch { /* skip malformed entries */ }
+  }
+
+  localStorage.setItem("macro_migration_v9", "done");
+}
+
+runMacroMigrationV9();
+
 const TARGETS = {
   gym:  { cal: 2500, p: 180, c: 270, f: 83 },
   rest: { cal: 2200, p: 180, c: 210, f: 73 },
@@ -449,6 +507,7 @@ const FOODS = [
   { cat: "Meat", name: "Chicken Leg — Skinless", cal: 115, p: 15, c: 0, f: 4.4, unit: "g" },
   { cat: "Meat", name: "Chicken Thigh — Skin-On", cal: 156, p: 15, c: 0, f: 11.5, unit: "g" },
   { cat: "Meat", name: "Chicken Thigh — Skinless", cal: 119, p: 16, c: 0, f: 5.7, unit: "g" },
+  { cat: "Meat", name: "Duck Breast — Skin-On", cal: 219, p: 16, c: 0.7, f: 17, unit: "g" },
   { cat: "Meat", name: "Lamb chops", cal: 218, p: 22, c: 0, f: 14, unit: "g" },
   { cat: "Meat", name: "Lamb mince — 20% fat", cal: 216, p: 16, c: 0, f: 16.5, unit: "g" },
   { cat: "Meat", name: "Pork loin — lean", cal: 133, p: 25, c: 0, f: 3.5, unit: "g" },
@@ -509,7 +568,7 @@ const FOODS = [
   { cat: "Grains", name: "Rice cake (per cake)", cal: 35, p: 0.7, c: 7.3, f: 0.3, unit: "serving", servingG: 9 },
   { cat: "Grains", name: "Bran flakes — M&S", cal: 359, p: 12, c: 64, f: 2.5, unit: "g" },
   { cat: "Grains", name: "White rice", cal: 365, p: 7, c: 80, f: 0.7, unit: "g" },
-  { cat: "Grains", name: "Whey protein (per 25g scoop)", cal: 95, p: 20, c: 2, f: 1.5, unit: "serving", servingG: 25 },
+  { cat: "Grains", name: "Whey Protein", cal: 104, p: 22, c: 2, f: 1.5, unit: "serving", servingG: 1 },
   { cat: "Grains", name: "Tortilla wrap — medium", cal: 138, p: 3.5, c: 24, f: 3, unit: "serving", servingG: 45 },
   { cat: "Grains", name: "Rye cracker (per cracker)", cal: 37, p: 1, c: 7, f: 0.3, unit: "serving", servingG: 10 },
   { cat: "Grains", name: "Rye bread — wholegrain (per slice)", cal: 79, p: 2.5, c: 15, f: 0.5, unit: "serving", servingG: 35 },
