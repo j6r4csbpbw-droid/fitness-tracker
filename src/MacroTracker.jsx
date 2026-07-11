@@ -505,6 +505,8 @@ function runMacroMigrationV10() {
     if (k && k.startsWith("day_")) dayKeys.push(k);
   }
 
+  const affectedMonths = new Set();
+
   for (const key of dayKeys) {
     try {
       const day = JSON.parse(localStorage.getItem(key));
@@ -542,7 +544,14 @@ function runMacroMigrationV10() {
       ].filter(s => s === "hit").length;
 
       localStorage.setItem(key, JSON.stringify(day));
+      // key is "day_YYYY-MM-DD" → month is "YYYY-MM"
+      affectedMonths.add(key.slice(4, 11));
     } catch { /* skip malformed entries */ }
+  }
+
+  // Force month summaries to regenerate from corrected day totals
+  for (const ym of affectedMonths) {
+    localStorage.removeItem(`month_${ym}`);
   }
 
   localStorage.setItem("macro_migration_v10", "done");
@@ -562,6 +571,8 @@ function runMacroMigrationV11() {
     const k = localStorage.key(i);
     if (k && k.startsWith("day_")) dayKeys.push(k);
   }
+
+  const affectedMonths = new Set();
 
   for (const key of dayKeys) {
     try {
@@ -600,7 +611,14 @@ function runMacroMigrationV11() {
       ].filter(s => s === "hit").length;
 
       localStorage.setItem(key, JSON.stringify(day));
+      // key is "day_YYYY-MM-DD" → month is "YYYY-MM"
+      affectedMonths.add(key.slice(4, 11));
     } catch { /* skip malformed entries */ }
+  }
+
+  // Force month summaries to regenerate from corrected day totals
+  for (const ym of affectedMonths) {
+    localStorage.removeItem(`month_${ym}`);
   }
 
   localStorage.setItem("macro_migration_v11", "done");
