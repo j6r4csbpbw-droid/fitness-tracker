@@ -492,6 +492,64 @@ function runMacroMigrationV9() {
 
 runMacroMigrationV9();
 
+function runMacroMigrationV10() {
+  if (localStorage.getItem("macro_migration_v10") === "done") return;
+
+  function getStatus(val, target) {
+    return Math.abs(val / target - 1) <= 0.10 ? "hit" : "over";
+  }
+
+  const dayKeys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith("day_")) dayKeys.push(k);
+  }
+
+  for (const key of dayKeys) {
+    try {
+      const day = JSON.parse(localStorage.getItem(key));
+      if (!day || !Array.isArray(day.entries)) continue;
+      let changed = false;
+
+      for (const entry of day.entries) {
+        if (entry.food?.name !== "Tortilla Chips — M&S Lightly Salted") continue;
+        const mult = entry.qty / 100;
+        entry.food.cal = 481; entry.food.p = 5.5; entry.food.c = 62.7; entry.food.f = 21.9;
+        entry.macros = {
+          cal: Math.round(481  * mult * 10) / 10,
+          p:   Math.round(5.5  * mult * 10) / 10,
+          c:   Math.round(62.7 * mult * 10) / 10,
+          f:   Math.round(21.9 * mult * 10) / 10,
+        };
+        changed = true;
+      }
+
+      if (!changed) continue;
+
+      day.totals = {
+        cal: day.entries.reduce((a, e) => a + e.macros.cal, 0),
+        p:   day.entries.reduce((a, e) => a + e.macros.p,   0),
+        c:   day.entries.reduce((a, e) => a + e.macros.c,   0),
+        f:   day.entries.reduce((a, e) => a + e.macros.f,   0),
+      };
+
+      const fatMax = day.isGym ? 83 : 73;
+      day.score = [
+        getStatus(day.totals.cal, day.targets.cal),
+        getStatus(day.totals.p,   180),
+        getStatus(day.totals.cal, day.targets.cal),
+        (day.totals.f >= 40 && day.totals.f <= fatMax) ? "hit" : "over",
+      ].filter(s => s === "hit").length;
+
+      localStorage.setItem(key, JSON.stringify(day));
+    } catch { /* skip malformed entries */ }
+  }
+
+  localStorage.setItem("macro_migration_v10", "done");
+}
+
+runMacroMigrationV10();
+
 const TARGETS = {
   gym:  { cal: 2500, p: 180, c: 270, f: 83 },
   rest: { cal: 2200, p: 180, c: 210, f: 73 },
@@ -600,7 +658,7 @@ const FOODS = [
   { cat: "Dirty", name: "Pizza — per slice (~120g)", cal: 330, p: 13, c: 40, f: 13, unit: "serving", servingG: 120 },
   { cat: "Dirty", name: "Potato chips — standard bag (35g)", cal: 188, p: 2.5, c: 19, f: 12, unit: "serving", servingG: 35 },
   { cat: "Dirty", name: "Steak & ale pie", cal: 1110, p: 34, c: 105, f: 58, unit: "serving", servingG: 1 },
-  { cat: "Dirty", name: "Tortilla Chips — M&S Lightly Salted", cal: 507, p: 5.5, c: 60.1, f: 25.9, unit: "g" },
+  { cat: "Dirty", name: "Tortilla Chips — M&S Lightly Salted", cal: 481, p: 5.5, c: 62.7, f: 21.9, unit: "g" },
   { cat: "Dirty", name: "Whisky (25ml)", cal: 55, p: 0, c: 0, f: 0, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "Wine — red (175ml glass)", cal: 130, p: 0.1, c: 4, f: 0, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "Cheat meal — mild", cal: 1000, p: 30, c: 100, f: 48, unit: "serving", servingG: 1 },
