@@ -550,6 +550,64 @@ function runMacroMigrationV10() {
 
 runMacroMigrationV10();
 
+function runMacroMigrationV11() {
+  if (localStorage.getItem("macro_migration_v11") === "done") return;
+
+  function getStatus(val, target) {
+    return Math.abs(val / target - 1) <= 0.10 ? "hit" : "over";
+  }
+
+  const dayKeys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith("day_")) dayKeys.push(k);
+  }
+
+  for (const key of dayKeys) {
+    try {
+      const day = JSON.parse(localStorage.getItem(key));
+      if (!day || !Array.isArray(day.entries)) continue;
+      let changed = false;
+
+      for (const entry of day.entries) {
+        if (entry.food?.name !== "Chicken Drumstick — Skin-On") continue;
+        const mult = entry.qty / 100;
+        entry.food.cal = 175; entry.food.p = 19.8; entry.food.c = 0; entry.food.f = 10.5;
+        entry.macros = {
+          cal: Math.round(175  * mult * 10) / 10,
+          p:   Math.round(19.8 * mult * 10) / 10,
+          c:   0,
+          f:   Math.round(10.5 * mult * 10) / 10,
+        };
+        changed = true;
+      }
+
+      if (!changed) continue;
+
+      day.totals = {
+        cal: day.entries.reduce((a, e) => a + e.macros.cal, 0),
+        p:   day.entries.reduce((a, e) => a + e.macros.p,   0),
+        c:   day.entries.reduce((a, e) => a + e.macros.c,   0),
+        f:   day.entries.reduce((a, e) => a + e.macros.f,   0),
+      };
+
+      const fatMax = day.isGym ? 83 : 73;
+      day.score = [
+        getStatus(day.totals.cal, day.targets.cal),
+        getStatus(day.totals.p,   180),
+        getStatus(day.totals.cal, day.targets.cal),
+        (day.totals.f >= 40 && day.totals.f <= fatMax) ? "hit" : "over",
+      ].filter(s => s === "hit").length;
+
+      localStorage.setItem(key, JSON.stringify(day));
+    } catch { /* skip malformed entries */ }
+  }
+
+  localStorage.setItem("macro_migration_v11", "done");
+}
+
+runMacroMigrationV11();
+
 const TARGETS = {
   gym:  { cal: 2500, p: 180, c: 270, f: 83 },
   rest: { cal: 2200, p: 180, c: 210, f: 73 },
@@ -559,7 +617,7 @@ const FOODS = [
   { cat: "Meat", name: "Beef mince — 20% fat", cal: 196, p: 17, c: 0, f: 14, unit: "g" },
   { cat: "Meat", name: "Beef mince — 5% fat", cal: 128, p: 20, c: 0, f: 5, unit: "g" },
   { cat: "Meat", name: "Chicken breast — skinless", cal: 120, p: 23, c: 0, f: 2, unit: "g" },
-  { cat: "Meat", name: "Chicken Drumstick — Skin-On", cal: 123, p: 13, c: 0, f: 7.7, unit: "g" },
+  { cat: "Meat", name: "Chicken Drumstick — Skin-On", cal: 175, p: 19.8, c: 0, f: 10.5, unit: "g" },
   { cat: "Meat", name: "Chicken Drumstick — Skinless", cal: 91, p: 18, c: 0, f: 2.8, unit: "g" },
   { cat: "Meat", name: "Chicken Leg — Skin-On", cal: 157, p: 13, c: 0, f: 10.2, unit: "g" },
   { cat: "Meat", name: "Chicken Leg — Skinless", cal: 115, p: 15, c: 0, f: 4.4, unit: "g" },
