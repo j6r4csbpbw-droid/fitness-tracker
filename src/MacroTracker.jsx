@@ -626,6 +626,56 @@ function runMacroMigrationV11() {
 
 runMacroMigrationV11();
 
+function runMacroMigrationV12() {
+  if (localStorage.getItem("macro_migration_v12") === "done") return;
+
+  const RENAMES = {
+    "Egg — cooked (1 egg)":           "Egg",
+    "Dark chocolate — 85%":           "Dark Chocolate",
+    "Guinness Zero (440ml)":          "Guinness Zero (Can)",
+    "Pizza — per slice (~120g)":      "Pizza — Slice",
+    "Tortilla Chips — M&S Lightly Salted": "M&S Tortilla Chips",
+    "Egg Fried Rice — Microwave":     "Rice",
+    "Egg noodles":                    "Noodles",
+    "Rice cake (per cake)":           "Nordic Rice Cake",
+    "Rye bread — wholegrain (per slice)": "M&S Rye Bread",
+    "Tortilla wrap — medium":         "Tortilla Wrap",
+    "Assenhaims — chicken meal large":"Assenheims",
+    "Nando's Meal":                   "Nando's",
+    "Pork loin — lean":               "Pork Loin",
+    "Edamame — shelled":              "Edamame",
+    "Mayo — Reduced Fat (per squeeze)":"Mayo (Reduced Fat)",
+  };
+
+  const dayKeys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith("day_")) dayKeys.push(k);
+  }
+
+  for (const key of dayKeys) {
+    try {
+      const day = JSON.parse(localStorage.getItem(key));
+      if (!day || !Array.isArray(day.entries)) continue;
+      let changed = false;
+
+      for (const entry of day.entries) {
+        const newName = RENAMES[entry.food?.name];
+        if (!newName) continue;
+        entry.food.name = newName;
+        changed = true;
+      }
+
+      if (!changed) continue;
+      localStorage.setItem(key, JSON.stringify(day));
+    } catch { /* skip malformed entries */ }
+  }
+
+  localStorage.setItem("macro_migration_v12", "done");
+}
+
+runMacroMigrationV12();
+
 const TARGETS = {
   gym:  { cal: 2500, p: 180, c: 270, f: 83 },
   rest: { cal: 2200, p: 180, c: 210, f: 73 },
@@ -644,7 +694,7 @@ const FOODS = [
   { cat: "Meat", name: "Duck Breast — Skin-On", cal: 219, p: 16, c: 0.7, f: 17, unit: "g" },
   { cat: "Meat", name: "Lamb chops", cal: 218, p: 22, c: 0, f: 14, unit: "g" },
   { cat: "Meat", name: "Lamb mince — 20% fat", cal: 216, p: 16, c: 0, f: 16.5, unit: "g" },
-  { cat: "Meat", name: "Pork loin — lean", cal: 133, p: 25, c: 0, f: 3.5, unit: "g" },
+  { cat: "Meat", name: "Pork Loin", cal: 133, p: 25, c: 0, f: 3.5, unit: "g" },
   { cat: "Meat", name: "Pork mince — 5% fat", cal: 122, p: 21, c: 0, f: 4, unit: "g" },
   { cat: "Meat", name: "Pork sausages", cal: 268, p: 14, c: 8, f: 21, unit: "g" },
   { cat: "Meat", name: "Rump steak", cal: 166, p: 26, c: 0, f: 6.5, unit: "g" },
@@ -668,12 +718,12 @@ const FOODS = [
   { cat: "Produce", name: "Chickpeas — canned", cal: 139, p: 8, c: 23, f: 2.6, unit: "g" },
   { cat: "Produce", name: "Courgette (1 whole)", cal: 34, p: 2.4, c: 6.2, f: 0.6, unit: "serving", servingG: 200 },
   { cat: "Produce", name: "Cucumber", cal: 15, p: 0.7, c: 3.6, f: 0.1, unit: "g" },
-  { cat: "Produce", name: "Edamame — shelled", cal: 122, p: 11, c: 10, f: 5, unit: "g" },
+  { cat: "Produce", name: "Edamame", cal: 122, p: 11, c: 10, f: 5, unit: "g" },
   { cat: "Produce", name: "Frozen peas", cal: 77, p: 5, c: 14, f: 0.4, unit: "g" },
   { cat: "Produce", name: "Green beans", cal: 31, p: 1.8, c: 7, f: 0.1, unit: "g" },
   { cat: "Produce", name: "Kale", cal: 49, p: 4.3, c: 9, f: 0.9, unit: "g" },
   { cat: "Produce", name: "Kidney beans — canned", cal: 100, p: 7, c: 18, f: 0.5, unit: "g" },
-  { cat: "Produce", name: "Mayo — Reduced Fat (per squeeze)", cal: 37, p: 0.1, c: 1.2, f: 3.5, unit: "serving", servingG: 1 },
+  { cat: "Produce", name: "Mayo (Reduced Fat)", cal: 37, p: 0.1, c: 1.2, f: 3.5, unit: "serving", servingG: 1 },
   { cat: "Produce", name: "Mixed Greens", cal: 17, p: 1.5, c: 3.2, f: 0.2, unit: "g" },
   { cat: "Produce", name: "Onion (1 medium)", cal: 60, p: 1.8, c: 14, f: 0.1, unit: "serving", servingG: 150 },
   { cat: "Produce", name: "Potato", cal: 77, p: 2, c: 17.5, f: 0.1, unit: "g" },
@@ -689,39 +739,38 @@ const FOODS = [
   { cat: "Dairy", name: "Cheese — Parmigiano Reggiano", cal: 431, p: 38, c: 0, f: 29, unit: "g" },
   { cat: "Dairy", name: "Cheese — Pecorino Romano", cal: 387, p: 32, c: 0, f: 26, unit: "g" },
   { cat: "Dairy", name: "Cottage cheese — low fat", cal: 77, p: 13, c: 3.5, f: 1, unit: "g" },
-  { cat: "Dairy", name: "Egg — cooked (1 egg)", cal: 93, p: 7.8, c: 0.7, f: 6.6, unit: "serving", servingG: 60 },
+  { cat: "Dairy", name: "Egg", cal: 93, p: 7.8, c: 0.7, f: 6.6, unit: "serving", servingG: 60 },
   { cat: "Dairy", name: "Milk — skimmed", cal: 35, p: 3.4, c: 5, f: 0.1, unit: "g" },
   { cat: "Dairy", name: "Soy milk — unsweetened", cal: 33, p: 3.3, c: 1.8, f: 1.8, unit: "g" },
   { cat: "Dairy", name: "Yogurt — Greek, 0% fat", cal: 57, p: 10, c: 4, f: 0.3, unit: "g" },
   { cat: "Grains", name: "Bread — sourdough (per slice)", cal: 90, p: 3, c: 17, f: 0.7, unit: "serving", servingG: 35 },
   { cat: "Grains", name: "Bread — wholemeal (per slice)", cal: 81, p: 3.5, c: 14, f: 1.1, unit: "serving", servingG: 35 },
-  { cat: "Grains", name: "Egg noodles", cal: 385, p: 13, c: 72, f: 6, unit: "g" },
+  { cat: "Grains", name: "Noodles", cal: 385, p: 13, c: 72, f: 6, unit: "g" },
   { cat: "Grains", name: "Pasta — regular", cal: 371, p: 13, c: 75, f: 1.5, unit: "g" },
   { cat: "Grains", name: "Pasta — wholemeal", cal: 348, p: 14, c: 68, f: 2.5, unit: "g" },
   { cat: "Grains", name: "Quinoa", cal: 368, p: 14, c: 64, f: 6, unit: "g" },
-  { cat: "Grains", name: "Rice cake (per cake)", cal: 35, p: 0.7, c: 7.3, f: 0.3, unit: "serving", servingG: 9 },
+  { cat: "Grains", name: "Nordic Rice Cake", cal: 35, p: 0.7, c: 7.3, f: 0.3, unit: "serving", servingG: 9 },
   { cat: "Grains", name: "Bran flakes — M&S", cal: 359, p: 12, c: 64, f: 2.5, unit: "g" },
-  { cat: "Grains", name: "Egg Fried Rice — Microwave", cal: 156, p: 3.7, c: 29, f: 2.7, unit: "g" },
+  { cat: "Grains", name: "Rice", cal: 156, p: 3.7, c: 29, f: 2.7, unit: "g" },
   { cat: "Grains", name: "Whey Protein", cal: 104, p: 22, c: 2, f: 1.5, unit: "serving", servingG: 1 },
-  { cat: "Grains", name: "Tortilla wrap — medium", cal: 138, p: 3.5, c: 24, f: 3, unit: "serving", servingG: 45 },
+  { cat: "Grains", name: "Tortilla Wrap", cal: 138, p: 3.5, c: 24, f: 3, unit: "serving", servingG: 45 },
   { cat: "Grains", name: "Rye cracker (per cracker)", cal: 37, p: 1, c: 7, f: 0.3, unit: "serving", servingG: 10 },
-  { cat: "Grains", name: "Rye bread — wholegrain (per slice)", cal: 79, p: 2.5, c: 15, f: 0.5, unit: "serving", servingG: 35 },
+  { cat: "Grains", name: "M&S Rye Bread", cal: 79, p: 2.5, c: 15, f: 0.5, unit: "serving", servingG: 35 },
   { cat: "Condiments", name: "Butter (per 10g)", cal: 72, p: 0.1, c: 0, f: 8.1, unit: "serving", servingG: 10 },
   { cat: "Condiments", name: "Honey (per tbsp)", cal: 46, p: 0, c: 12, f: 0, unit: "serving", servingG: 15 },
   { cat: "Condiments", name: "Hot sauce (per tbsp)", cal: 2, p: 0.1, c: 0.2, f: 0.1, unit: "serving", servingG: 15 },
   { cat: "Condiments", name: "Nando's marinade (per tbsp)", cal: 14, p: 0.2, c: 2.7, f: 0.2, unit: "serving", servingG: 15 },
-  { cat: "Condiments", name: "Olive oil (per tbsp)", cal: 119, p: 0, c: 0, f: 13.5, unit: "serving", servingG: 15 },
   { cat: "Condiments", name: "Peanut butter — natural", cal: 598, p: 25, c: 20, f: 50, unit: "g" },
   { cat: "Condiments", name: "Sesame oil (per tbsp)", cal: 119, p: 0, c: 0, f: 13.5, unit: "serving", servingG: 15 },
   { cat: "Condiments", name: "Soy sauce — light (per tbsp)", cal: 8, p: 1.2, c: 0.8, f: 0, unit: "serving", servingG: 15 },
-  { cat: "Meals", name: "Assenhaims — chicken meal large", cal: 850, p: 65, c: 72, f: 28, unit: "serving", servingG: 1 },
+  { cat: "Meals", name: "Assenheims", cal: 850, p: 65, c: 72, f: 28, unit: "serving", servingG: 1 },
   { cat: "Meals", name: "McDonald's sausage & egg McMuffin", cal: 430, p: 26, c: 29, f: 34, unit: "serving", servingG: 1 },
   { cat: "Meals", name: "Mediterranean chicken rice box", cal: 510, p: 47, c: 60, f: 8, unit: "serving", servingG: 1 },
   { cat: "Meals", name: "Mediterranean chicken wrap", cal: 480, p: 32, c: 42, f: 18, unit: "serving", servingG: 1 },
   { cat: "Meals", name: "Pizza (whole 12\")", cal: 1500, p: 65, c: 155, f: 60, unit: "serving", servingG: 1 },
   { cat: "Meals", name: "Roast & Greens — chicken box large", cal: 620, p: 48, c: 38, f: 28, unit: "serving", servingG: 1 },
   { cat: "Meals", name: "Meal — Light", cal: 500, p: 20, c: 60, f: 18, unit: "serving", servingG: 1 },
-  { cat: "Meals", name: "Nando's Meal", cal: 949, p: 85, c: 55, f: 44, unit: "serving", servingG: 1 },
+  { cat: "Meals", name: "Nando's", cal: 949, p: 85, c: 55, f: 44, unit: "serving", servingG: 1 },
   { cat: "Meals", name: "Sandwich Sandwich — chicken", cal: 680, p: 38, c: 55, f: 27, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "Beer — ale (pint)", cal: 196, p: 1.5, c: 15, f: 0, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "Beer — stout (pint)", cal: 210, p: 2, c: 18, f: 0, unit: "serving", servingG: 1 },
@@ -729,19 +778,19 @@ const FOODS = [
   { cat: "Dirty", name: "Fish & chips", cal: 1240, p: 58, c: 128, f: 52, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "Fried chicken — per piece (KFC avg)", cal: 320, p: 28, c: 8, f: 19, unit: "serving", servingG: 150 },
   { cat: "Dirty", name: "Gin (44ml shot)", cal: 97, p: 0, c: 0, f: 0, unit: "serving", servingG: 1 },
-  { cat: "Dirty", name: "Guinness Zero (440ml)", cal: 75, p: 1.3, c: 16.7, f: 0, unit: "serving", servingG: 440 },
+  { cat: "Dirty", name: "Guinness Zero (Can)", cal: 75, p: 1.3, c: 16.7, f: 0, unit: "serving", servingG: 440 },
   { cat: "Dirty", name: "Ice cream — per scoop (~100g)", cal: 207, p: 3.5, c: 24, f: 11, unit: "serving", servingG: 100 },
-  { cat: "Dirty", name: "Pizza — per slice (~120g)", cal: 330, p: 13, c: 40, f: 13, unit: "serving", servingG: 120 },
+  { cat: "Dirty", name: "Pizza — Slice", cal: 330, p: 13, c: 40, f: 13, unit: "serving", servingG: 120 },
   { cat: "Dirty", name: "Potato chips — standard bag (35g)", cal: 188, p: 2.5, c: 19, f: 12, unit: "serving", servingG: 35 },
   { cat: "Dirty", name: "Steak & ale pie", cal: 1110, p: 34, c: 105, f: 58, unit: "serving", servingG: 1 },
-  { cat: "Dirty", name: "Tortilla Chips — M&S Lightly Salted", cal: 481, p: 5.5, c: 62.7, f: 21.9, unit: "g" },
+  { cat: "Dirty", name: "M&S Tortilla Chips", cal: 481, p: 5.5, c: 62.7, f: 21.9, unit: "g" },
   { cat: "Dirty", name: "Whisky (25ml)", cal: 55, p: 0, c: 0, f: 0, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "Wine — red (175ml glass)", cal: 130, p: 0.1, c: 4, f: 0, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "Cheat meal — mild", cal: 1000, p: 30, c: 100, f: 48, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "Cheat meal — moderate", cal: 1500, p: 35, c: 145, f: 68, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "Cheat meal — nuclear", cal: 2000, p: 40, c: 195, f: 95, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "Fries — medium serving", cal: 530, p: 6, c: 68, f: 26, unit: "serving", servingG: 200 },
-  { cat: "Dirty", name: "Dark chocolate — 85%", cal: 598, p: 7, c: 20, f: 50, unit: "g" },
+  { cat: "Dirty", name: "Dark Chocolate", cal: 598, p: 7, c: 20, f: 50, unit: "g" },
 ];
 
 const CAT_EMOJIS = { Meat:"🥩", Seafood:"🐟", Produce:"🥦", Dairy:"🥚", Grains:"🍚", Condiments:"🫙", Meals:"🍽", Dirty:"🍕" };
