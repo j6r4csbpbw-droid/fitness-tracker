@@ -701,7 +701,7 @@ const FOODS = [
   { cat: "Grains", name: "Quinoa", cal: 368, p: 14, c: 64, f: 6, unit: "g" },
   { cat: "Grains", name: "Rice cake (per cake)", cal: 35, p: 0.7, c: 7.3, f: 0.3, unit: "serving", servingG: 9 },
   { cat: "Grains", name: "Bran flakes — M&S", cal: 359, p: 12, c: 64, f: 2.5, unit: "g" },
-  { cat: "Grains", name: "White rice", cal: 365, p: 7, c: 80, f: 0.7, unit: "g" },
+  { cat: "Grains", name: "Egg Fried Rice — Microwave", cal: 156, p: 3.7, c: 29, f: 2.7, unit: "g" },
   { cat: "Grains", name: "Whey Protein", cal: 104, p: 22, c: 2, f: 1.5, unit: "serving", servingG: 1 },
   { cat: "Grains", name: "Tortilla wrap — medium", cal: 138, p: 3.5, c: 24, f: 3, unit: "serving", servingG: 45 },
   { cat: "Grains", name: "Rye cracker (per cracker)", cal: 37, p: 1, c: 7, f: 0.3, unit: "serving", servingG: 10 },
