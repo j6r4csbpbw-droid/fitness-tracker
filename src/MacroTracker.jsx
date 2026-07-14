@@ -742,6 +742,73 @@ function runMacroMigrationV13() {
 
 runMacroMigrationV13();
 
+function runMacroMigrationV14() {
+  if (localStorage.getItem("macro_migration_v14") === "done") return;
+
+  function getStatus(val, target) {
+    return Math.abs(val / target - 1) <= 0.10 ? "hit" : "over";
+  }
+
+  const dayKeys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith("day_")) dayKeys.push(k);
+  }
+
+  const affectedMonths = new Set();
+
+  for (const key of dayKeys) {
+    try {
+      const day = JSON.parse(localStorage.getItem(key));
+      if (!day || !Array.isArray(day.entries)) continue;
+      let changed = false;
+
+      for (const entry of day.entries) {
+        if (entry.food?.name !== "Mediterranean chicken rice box" &&
+            entry.food?.name !== "Mediterranean Chicken Rice Box") continue;
+        const mult = entry.qty; // unit: "serving"
+        entry.food.name = "Mediterranean Chicken Rice Box";
+        entry.food.cal = 700; entry.food.p = 45; entry.food.c = 70; entry.food.f = 25;
+        entry.macros = {
+          cal: Math.round(700 * mult * 10) / 10,
+          p:   Math.round(45  * mult * 10) / 10,
+          c:   Math.round(70  * mult * 10) / 10,
+          f:   Math.round(25  * mult * 10) / 10,
+        };
+        changed = true;
+      }
+
+      if (!changed) continue;
+
+      day.totals = {
+        cal: day.entries.reduce((a, e) => a + e.macros.cal, 0),
+        p:   day.entries.reduce((a, e) => a + e.macros.p,   0),
+        c:   day.entries.reduce((a, e) => a + e.macros.c,   0),
+        f:   day.entries.reduce((a, e) => a + e.macros.f,   0),
+      };
+
+      const fatMax = day.isGym ? 83 : 73;
+      day.score = [
+        getStatus(day.totals.cal, day.targets.cal),
+        getStatus(day.totals.p,   180),
+        getStatus(day.totals.cal, day.targets.cal),
+        (day.totals.f >= 40 && day.totals.f <= fatMax) ? "hit" : "over",
+      ].filter(s => s === "hit").length;
+
+      localStorage.setItem(key, JSON.stringify(day));
+      affectedMonths.add(key.slice(4, 11));
+    } catch { /* skip malformed entries */ }
+  }
+
+  for (const ym of affectedMonths) {
+    localStorage.removeItem(`month_${ym}`);
+  }
+
+  localStorage.setItem("macro_migration_v14", "done");
+}
+
+runMacroMigrationV14();
+
 const TARGETS = {
   gym:  { cal: 2500, p: 180, c: 270, f: 83 },
   rest: { cal: 2200, p: 180, c: 210, f: 73 },
@@ -831,7 +898,7 @@ const FOODS = [
   { cat: "Condiments", name: "Soy sauce — light (per tbsp)", cal: 8, p: 1.2, c: 0.8, f: 0, unit: "serving", servingG: 15 },
   { cat: "Meals", name: "Assenheims", cal: 850, p: 65, c: 72, f: 28, unit: "serving", servingG: 1 },
   { cat: "Meals", name: "McDonald's sausage & egg McMuffin", cal: 430, p: 26, c: 29, f: 34, unit: "serving", servingG: 1 },
-  { cat: "Meals", name: "Mediterranean chicken rice box", cal: 510, p: 47, c: 60, f: 8, unit: "serving", servingG: 1 },
+  { cat: "Meals", name: "Mediterranean Chicken Rice Box", cal: 700, p: 45, c: 70, f: 25, unit: "serving", servingG: 1 },
   { cat: "Meals", name: "Mediterranean chicken wrap", cal: 480, p: 32, c: 42, f: 18, unit: "serving", servingG: 1 },
   { cat: "Meals", name: "Pizza (whole 12\")", cal: 1500, p: 65, c: 155, f: 60, unit: "serving", servingG: 1 },
   { cat: "Meals", name: "Roast & Greens — chicken box large", cal: 620, p: 48, c: 38, f: 28, unit: "serving", servingG: 1 },
