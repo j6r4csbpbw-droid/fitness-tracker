@@ -676,6 +676,72 @@ function runMacroMigrationV12() {
 
 runMacroMigrationV12();
 
+function runMacroMigrationV13() {
+  if (localStorage.getItem("macro_migration_v13") === "done") return;
+
+  function getStatus(val, target) {
+    return Math.abs(val / target - 1) <= 0.10 ? "hit" : "over";
+  }
+
+  const dayKeys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith("day_")) dayKeys.push(k);
+  }
+
+  const affectedMonths = new Set();
+
+  for (const key of dayKeys) {
+    try {
+      const day = JSON.parse(localStorage.getItem(key));
+      if (!day || !Array.isArray(day.entries)) continue;
+      let changed = false;
+
+      for (const entry of day.entries) {
+        if (entry.food?.name !== "Whisky (25ml)") continue;
+        const mult = entry.qty; // unit: "serving"
+        entry.food.name = "Whisky (44ml)";
+        entry.food.cal = 97;
+        entry.macros = {
+          cal: Math.round(97 * mult * 10) / 10,
+          p:   0,
+          c:   0,
+          f:   0,
+        };
+        changed = true;
+      }
+
+      if (!changed) continue;
+
+      day.totals = {
+        cal: day.entries.reduce((a, e) => a + e.macros.cal, 0),
+        p:   day.entries.reduce((a, e) => a + e.macros.p,   0),
+        c:   day.entries.reduce((a, e) => a + e.macros.c,   0),
+        f:   day.entries.reduce((a, e) => a + e.macros.f,   0),
+      };
+
+      const fatMax = day.isGym ? 83 : 73;
+      day.score = [
+        getStatus(day.totals.cal, day.targets.cal),
+        getStatus(day.totals.p,   180),
+        getStatus(day.totals.cal, day.targets.cal),
+        (day.totals.f >= 40 && day.totals.f <= fatMax) ? "hit" : "over",
+      ].filter(s => s === "hit").length;
+
+      localStorage.setItem(key, JSON.stringify(day));
+      affectedMonths.add(key.slice(4, 11));
+    } catch { /* skip malformed entries */ }
+  }
+
+  for (const ym of affectedMonths) {
+    localStorage.removeItem(`month_${ym}`);
+  }
+
+  localStorage.setItem("macro_migration_v13", "done");
+}
+
+runMacroMigrationV13();
+
 const TARGETS = {
   gym:  { cal: 2500, p: 180, c: 270, f: 83 },
   rest: { cal: 2200, p: 180, c: 210, f: 73 },
@@ -784,7 +850,7 @@ const FOODS = [
   { cat: "Dirty", name: "Potato chips — standard bag (35g)", cal: 188, p: 2.5, c: 19, f: 12, unit: "serving", servingG: 35 },
   { cat: "Dirty", name: "Steak & ale pie", cal: 1110, p: 34, c: 105, f: 58, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "M&S Tortilla Chips", cal: 481, p: 5.5, c: 62.7, f: 21.9, unit: "g" },
-  { cat: "Dirty", name: "Whisky (25ml)", cal: 55, p: 0, c: 0, f: 0, unit: "serving", servingG: 1 },
+  { cat: "Dirty", name: "Whisky (44ml)", cal: 97, p: 0, c: 0, f: 0, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "Wine — red (175ml glass)", cal: 130, p: 0.1, c: 4, f: 0, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "Cheat meal — mild", cal: 1000, p: 30, c: 100, f: 48, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "Cheat meal — moderate", cal: 1500, p: 35, c: 145, f: 68, unit: "serving", servingG: 1 },
