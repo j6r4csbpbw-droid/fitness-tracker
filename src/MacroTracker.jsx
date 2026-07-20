@@ -847,6 +847,7 @@ const FOODS = [
   { cat: "Produce", name: "Blackberries", cal: 43, p: 1.4, c: 10, f: 0.5, unit: "g" },
   { cat: "Produce", name: "Blueberries", cal: 57, p: 0.7, c: 14, f: 0.3, unit: "g" },
   { cat: "Produce", name: "Broccoli", cal: 34, p: 2.8, c: 7, f: 0.4, unit: "g" },
+  { cat: "Produce", name: "Carrots", cal: 41, p: 0.9, c: 9.6, f: 0.2, unit: "g" },
   { cat: "Produce", name: "Cauliflower", cal: 25, p: 1.9, c: 5, f: 0.3, unit: "g" },
   { cat: "Produce", name: "Chickpeas — canned", cal: 139, p: 8, c: 23, f: 2.6, unit: "g" },
   { cat: "Produce", name: "Courgette (1 whole)", cal: 34, p: 2.4, c: 6.2, f: 0.6, unit: "serving", servingG: 200 },
