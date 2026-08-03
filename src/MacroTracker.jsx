@@ -887,7 +887,7 @@ const FOODS = [
   { cat: "Grains", name: "Bran flakes — M&S", cal: 359, p: 12, c: 64, f: 2.5, unit: "g" },
   { cat: "Grains", name: "Rice", cal: 156, p: 3.7, c: 29, f: 2.7, unit: "g" },
   { cat: "Grains", name: "Whey Protein", cal: 104, p: 22, c: 2, f: 1.5, unit: "serving", servingG: 1 },
-  { cat: "Grains", name: "Tortilla Wrap", cal: 138, p: 3.5, c: 24, f: 3, unit: "serving", servingG: 45 },
+  { cat: "Grains", name: "Tortilla Wrap", cal: 122, p: 3.7, c: 21.7, f: 2.1, unit: "serving", servingG: 41 },
   { cat: "Grains", name: "Rye cracker (per cracker)", cal: 37, p: 1, c: 7, f: 0.3, unit: "serving", servingG: 10 },
   { cat: "Grains", name: "M&S Rye Bread", cal: 79, p: 2.5, c: 15, f: 0.5, unit: "serving", servingG: 35 },
   { cat: "Condiments", name: "Butter (per 10g)", cal: 72, p: 0.1, c: 0, f: 8.1, unit: "serving", servingG: 10 },
