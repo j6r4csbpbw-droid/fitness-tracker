@@ -918,6 +918,7 @@ const FOODS = [
   { cat: "Dirty", name: "Potato chips — standard bag (35g)", cal: 188, p: 2.5, c: 19, f: 12, unit: "serving", servingG: 35 },
   { cat: "Dirty", name: "Steak & ale pie", cal: 1110, p: 34, c: 105, f: 58, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "M&S Tortilla Chips", cal: 481, p: 5.5, c: 62.7, f: 21.9, unit: "g" },
+  { cat: "Dirty", name: "Nduja", cal: 450, p: 14, c: 1, f: 42, unit: "g" },
   { cat: "Dirty", name: "Whisky (44ml)", cal: 97, p: 0, c: 0, f: 0, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "Wine — red (175ml glass)", cal: 130, p: 0.1, c: 4, f: 0, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "Cheat meal — mild", cal: 1000, p: 30, c: 100, f: 48, unit: "serving", servingG: 1 },
