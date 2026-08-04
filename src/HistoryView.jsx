@@ -7,8 +7,8 @@ const DAY_ABBR = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 
 const TIGHT = 0.05;
 const LOOSE = 0.10;
-const GYM_TARGETS  = { cal: 2500, p: 180, c: 270, f: 83 };
-const REST_TARGETS = { cal: 2200, p: 180, c: 210, f: 73 };
+const GYM_TARGETS  = { cal: 2500, p: 180, c: 270, f: 85 };
+const REST_TARGETS = { cal: 2200, p: 180, c: 210, f: 75 };
 const MC = { p: "#3b82f6", c: "#b45309", f: "#059669" };
 
 function getStatus(val, target) {
@@ -17,8 +17,9 @@ function getStatus(val, target) {
 }
 
 function getFatStatus(fatVal, isGym) {
-  const fatMax = isGym ? 83 : 73;
-  if (fatVal >= 40 && fatVal <= fatMax) return "hit";
+  const fatMax = isGym ? 85 : 75;
+  const fatMin = fatMax * 0.51;
+  if (fatVal >= fatMin && fatVal <= fatMax * 1.05) return "hit";
   return "over";
 }
 

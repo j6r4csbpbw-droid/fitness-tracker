@@ -885,9 +885,67 @@ function runMacroMigrationV15() {
 
 runMacroMigrationV15();
 
+function runMacroMigrationV16() {
+  if (localStorage.getItem("macro_migration_v16") === "done") return;
+
+  function getStatus(val, target) {
+    return Math.abs(val / target - 1) <= 0.10 ? "hit" : "over";
+  }
+
+  function getFatStatus(fatVal, isGym) {
+    const fatMax = isGym ? 85 : 75;
+    const fatMin = fatMax * 0.51;
+    if (fatVal >= fatMin && fatVal <= fatMax * 1.05) return "hit";
+    return "over";
+  }
+
+  const allKeys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k) allKeys.push(k);
+  }
+
+  for (const key of allKeys) {
+    if (key.startsWith("day_")) {
+      try {
+        const day = JSON.parse(localStorage.getItem(key));
+        if (!day || !day.totals || !day.targets) continue;
+        day.targets.f = day.isGym ? 85 : 75;
+        day.score = [
+          getStatus(day.totals.cal, day.targets.cal),
+          getStatus(day.totals.p,   180),
+          getStatus(day.totals.cal, day.targets.cal),
+          getFatStatus(day.totals.f, day.isGym),
+        ].filter(s => s === "hit").length;
+        localStorage.setItem(key, JSON.stringify(day));
+      } catch { /* skip malformed entries */ }
+    } else if (key.startsWith("month_")) {
+      try {
+        const entry = JSON.parse(localStorage.getItem(key));
+        if (!entry || !entry.targets) continue;
+        const isGym = entry.targets.cal === 2500;
+        entry.targets.f = isGym ? 85 : 75;
+        if (entry.avgCal !== undefined) {
+          entry.score = [
+            getStatus(entry.avgCal, entry.targets.cal),
+            getStatus(entry.avgP,   180),
+            getStatus(entry.avgCal, entry.targets.cal),
+            getFatStatus(entry.avgF, isGym),
+          ].filter(s => s === "hit").length;
+        }
+        localStorage.setItem(key, JSON.stringify(entry));
+      } catch { /* skip malformed entries */ }
+    }
+  }
+
+  localStorage.setItem("macro_migration_v16", "done");
+}
+
+runMacroMigrationV16();
+
 const TARGETS = {
-  gym:  { cal: 2500, p: 180, c: 270, f: 83 },
-  rest: { cal: 2200, p: 180, c: 210, f: 73 },
+  gym:  { cal: 2500, p: 180, c: 270, f: 85 },
+  rest: { cal: 2200, p: 180, c: 210, f: 75 },
 };
 
 const FOODS = [
@@ -1020,6 +1078,13 @@ function getStatus(val, target) {
   const ratio = val / target;
   const dev = Math.abs(ratio - 1);
   if (dev <= 0.10) return "hit";
+  return "over";
+}
+
+function getFatStatus(fatVal, isGym) {
+  const fatMax = isGym ? 85 : 75;
+  const fatMin = fatMax * 0.51;
+  if (fatVal >= fatMin && fatVal <= fatMax * 1.05) return "hit";
   return "over";
 }
 
@@ -1201,14 +1266,16 @@ function AddModal({ onAdd, onClose }) {
   );
 }
 
-function SummaryCard({ totals, target, onReset, onEdit, onClearAll }) {
+function SummaryCard({ totals, target, isGym, onReset, onEdit, onClearAll }) {
   const items = [
     { label: "Calories", val: Math.round(totals.cal), tgt: target.cal, unit: "kcal", dot: "#6366f1" },
     { label: "Protein",  val: Math.round(totals.p),   tgt: target.p,   unit: "g",    dot: "#3b82f6" },
     { label: "Carbs",    val: Math.round(totals.c),   tgt: target.c,   unit: "g",    dot: "#f59e0b" },
     { label: "Fat",      val: Math.round(totals.f),   tgt: target.f,   unit: "g",    dot: "#10b981" },
   ];
-  const score = items.filter(i => getStatus(i.val, i.tgt) === "hit").length;
+  const score = items.filter(({ label, val, tgt }) =>
+    label === "Fat" ? getFatStatus(val, isGym) === "hit" : getStatus(val, tgt) === "hit"
+  ).length;
 
   return (
     <div style={{ margin: "12px 12px 90px" }}>
@@ -1224,7 +1291,7 @@ function SummaryCard({ totals, target, onReset, onEdit, onClearAll }) {
 
       <div style={{ background: "#fff", border: "1px solid #f0f0f0", borderTop: "none" }}>
         {items.map(({ label, val, tgt, unit, dot }, i) => {
-          const s = getStatus(val, tgt);
+          const s = label === "Fat" ? getFatStatus(val, isGym) : getStatus(val, tgt);
           const col = STATUS_COLOR[s];
           const pct = Math.min((val / tgt) * 100, 110);
           const diff = val - tgt;
@@ -1478,6 +1545,7 @@ export default function MacroTracker() {
         <SummaryCard
           totals={totals}
           target={target}
+          isGym={isGym}
           onEdit={() => setSubmitted(false)}
           onClearAll={() => { clearStorage(); localStorage.removeItem(`day_${formatDateKey(workingDate)}`); setSubmitted(false); setLog([]); }}
           onReset={() => { clearStorage(); setSubmitted(false); setLog([]); setWorkingDate(prev => advanceDay(prev)); }}
@@ -1494,8 +1562,12 @@ export default function MacroTracker() {
           </button>
           <button onClick={() => {
               const dateKey = formatDateKey(workingDate);
-              const score = [totals.cal, totals.p, totals.c, totals.f]
-                .filter((v, i) => Math.abs(v / [target.cal, target.p, target.c, target.f][i] - 1) <= 0.05).length;
+              const score = [
+                Math.abs(totals.cal / target.cal - 1) <= 0.05,
+                Math.abs(totals.p   / target.p   - 1) <= 0.05,
+                Math.abs(totals.c   / target.c   - 1) <= 0.05,
+                getFatStatus(totals.f, isGym) === "hit",
+              ].filter(Boolean).length;
               localStorage.setItem(`day_${dateKey}`, JSON.stringify({
                 date: dateKey, isGym, targets: target, totals, score, entries: [...log],
               }));
