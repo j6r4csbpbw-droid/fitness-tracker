@@ -1047,6 +1047,7 @@ const FOODS = [
   { cat: "Dirty", name: "Ice Cream", cal: 207, p: 3.5, c: 24, f: 11, unit: "serving", servingG: 100 },
   { cat: "Dirty", name: "Pizza — Slice", cal: 330, p: 13, c: 40, f: 13, unit: "serving", servingG: 120 },
   { cat: "Dirty", name: "Potato Chips", cal: 537, p: 7, c: 54, f: 34, unit: "g" },
+  { cat: "Dirty", name: "Snack", cal: 465, p: 7.6, c: 56.5, f: 20.4, unit: "g" },
   { cat: "Dirty", name: "Steak & ale pie", cal: 1110, p: 34, c: 105, f: 58, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "M&S Tortilla Chips", cal: 481, p: 5.5, c: 62.7, f: 21.9, unit: "g" },
   { cat: "Dirty", name: "Whisky", cal: 97, p: 0, c: 0, f: 0, unit: "serving", servingG: 44 },
