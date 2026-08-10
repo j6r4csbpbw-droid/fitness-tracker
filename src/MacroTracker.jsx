@@ -1042,7 +1042,7 @@ const FOODS = [
   { cat: "Produce", name: "Cucumber", cal: 45, p: 2.1, c: 10.8, f: 0.3, unit: "serving", servingG: 300 },
   { cat: "Produce", name: "Edamame", cal: 122, p: 11, c: 10, f: 5, unit: "g" },
   { cat: "Produce", name: "Frozen peas", cal: 77, p: 5, c: 14, f: 0.4, unit: "g" },
-  { cat: "Produce", name: "Green beans", cal: 31, p: 1.8, c: 7, f: 0.1, unit: "g" },
+  { cat: "Produce", name: "Green Beans", cal: 31, p: 1.8, c: 7, f: 0.1, unit: "g" },
   { cat: "Produce", name: "Kale", cal: 49, p: 4.3, c: 9, f: 0.9, unit: "g" },
   { cat: "Produce", name: "Kidney Beans", cal: 100, p: 7, c: 18, f: 0.5, unit: "g" },
   { cat: "Produce", name: "Mayo (Reduced Fat)", cal: 37, p: 0.1, c: 1.2, f: 3.5, unit: "serving", servingG: 1 },
