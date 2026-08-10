@@ -1083,7 +1083,7 @@ const FOODS = [
   { cat: "Meals", name: "Assenheim's", cal: 850, p: 65, c: 72, f: 28, unit: "serving", servingG: 1 },
   { cat: "Meals", name: "McDonald's Sausage & Egg McMuffin", cal: 430, p: 26, c: 29, f: 34, unit: "serving", servingG: 1 },
   { cat: "Meals", name: "Mediterranean Chicken Rice Box", cal: 700, p: 45, c: 70, f: 25, unit: "serving", servingG: 1 },
-  { cat: "Meals", name: "Mediterranean Chicken Wrap", cal: 480, p: 32, c: 42, f: 18, unit: "serving", servingG: 1 },
+  { cat: "Meals", name: "Mediterranean Chicken Wrap", cal: 670, p: 50, c: 44, f: 33, unit: "serving", servingG: 1 },
   { cat: "Meals", name: "Pizza (whole 12\")", cal: 1500, p: 65, c: 155, f: 60, unit: "serving", servingG: 1 },
   { cat: "Meals", name: "Roast & Greens", cal: 620, p: 48, c: 38, f: 28, unit: "serving", servingG: 1 },
   { cat: "Meals", name: "Meal — Light", cal: 500, p: 20, c: 60, f: 18, unit: "serving", servingG: 1 },
