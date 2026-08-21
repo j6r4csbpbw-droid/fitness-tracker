@@ -1069,7 +1069,7 @@ const TARGETS = {
 };
 
 const FOODS = [
-  { cat: "Meat", name: "Beef Mince — 15% Fat", cal: 173, p: 18, c: 0, f: 11, unit: "g" },
+  { cat: "Meat", name: "Beef Mince - 15%", cal: 173, p: 18, c: 0, f: 11, unit: "g" },
   { cat: "Meat", name: "Beef Mince — 20%", cal: 196, p: 17, c: 0, f: 14, unit: "g" },
   { cat: "Meat", name: "Beef Mince — 5%", cal: 128, p: 20, c: 0, f: 5, unit: "g" },
   { cat: "Meat", name: "Chicken Breast — Skinless", cal: 120, p: 23, c: 0, f: 2, unit: "g" },
