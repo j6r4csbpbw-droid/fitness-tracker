@@ -995,12 +995,81 @@ function runMacroMigrationV17() {
 
 runMacroMigrationV17();
 
+function runMacroMigrationV18() {
+  if (localStorage.getItem("macro_migration_v18") === "done") return;
+
+  function getStatus(val, target) {
+    return Math.abs(val / target - 1) <= 0.10 ? "hit" : "over";
+  }
+
+  function getFatStatus(fatVal, isGym) {
+    const fatMax = isGym ? 85 : 75;
+    const fatMin = fatMax * 0.51;
+    if (fatVal >= fatMin && fatVal <= fatMax * 1.05) return "hit";
+    return "over";
+  }
+
+  const dayKeys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith("day_")) dayKeys.push(k);
+  }
+
+  for (const key of dayKeys) {
+    try {
+      const day = JSON.parse(localStorage.getItem(key));
+      if (!day || !Array.isArray(day.entries)) continue;
+      let changed = false;
+
+      for (const entry of day.entries) {
+        if (entry.food?.name !== "Bread — Sourdough") continue;
+        const mult = entry.qty;
+        entry.food.cal = 100;
+        entry.food.p = 4.7;
+        entry.food.c = 18.3;
+        entry.food.f = 0.63;
+        entry.food.servingG = 45;
+        entry.macros = {
+          cal: Math.round(100  * mult * 10) / 10,
+          p:   Math.round(4.7  * mult * 10) / 10,
+          c:   Math.round(18.3 * mult * 10) / 10,
+          f:   Math.round(0.63 * mult * 10) / 10,
+        };
+        changed = true;
+      }
+
+      if (!changed) continue;
+
+      day.totals = {
+        cal: day.entries.reduce((a, e) => a + e.macros.cal, 0),
+        p:   day.entries.reduce((a, e) => a + e.macros.p,   0),
+        c:   day.entries.reduce((a, e) => a + e.macros.c,   0),
+        f:   day.entries.reduce((a, e) => a + e.macros.f,   0),
+      };
+
+      day.score = [
+        getStatus(day.totals.cal, day.targets.cal),
+        getStatus(day.totals.p,   180),
+        getStatus(day.totals.cal, day.targets.cal),
+        getFatStatus(day.totals.f, day.isGym),
+      ].filter(s => s === "hit").length;
+
+      localStorage.setItem(key, JSON.stringify(day));
+    } catch { /* skip malformed entries */ }
+  }
+
+  localStorage.setItem("macro_migration_v18", "done");
+}
+
+runMacroMigrationV18();
+
 const TARGETS = {
   gym:  { cal: 2500, p: 180, c: 270, f: 85 },
   rest: { cal: 2200, p: 180, c: 210, f: 75 },
 };
 
 const FOODS = [
+  { cat: "Meat", name: "Beef Mince — 15% Fat", cal: 173, p: 18, c: 0, f: 11, unit: "g" },
   { cat: "Meat", name: "Beef Mince — 20%", cal: 196, p: 17, c: 0, f: 14, unit: "g" },
   { cat: "Meat", name: "Beef Mince — 5%", cal: 128, p: 20, c: 0, f: 5, unit: "g" },
   { cat: "Meat", name: "Chicken Breast — Skinless", cal: 120, p: 23, c: 0, f: 2, unit: "g" },
@@ -1065,7 +1134,7 @@ const FOODS = [
   { cat: "Dairy", name: "Milk — Skimmed", cal: 35, p: 3.4, c: 5, f: 0.1, unit: "g" },
   { cat: "Dairy", name: "Soy Milk — Unsweetened", cal: 33, p: 3.3, c: 1.8, f: 1.8, unit: "g" },
   { cat: "Dairy", name: "Yogurt — Greek, 0% Fat", cal: 57, p: 10, c: 4, f: 0.3, unit: "g" },
-  { cat: "Grains", name: "Bread — Sourdough", cal: 90, p: 3, c: 17, f: 0.7, unit: "serving", servingG: 35 },
+  { cat: "Grains", name: "Bread — Sourdough", cal: 100, p: 4.7, c: 18.3, f: 0.63, unit: "serving", servingG: 45 },
   { cat: "Grains", name: "Bread — Wholemeal", cal: 81, p: 3.5, c: 14, f: 1.1, unit: "serving", servingG: 35 },
   { cat: "Grains", name: "Noodles", cal: 385, p: 13, c: 72, f: 6, unit: "g" },
   { cat: "Grains", name: "Pasta — Regular", cal: 371, p: 13, c: 75, f: 1.5, unit: "g" },
