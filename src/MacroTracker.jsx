@@ -1063,6 +1063,14 @@ function runMacroMigrationV18() {
 
 runMacroMigrationV18();
 
+function runMacroMigrationV19() {
+  if (localStorage.getItem("macro_migration_v19") === "done") return;
+  // New food item added — no historical entries to update
+  localStorage.setItem("macro_migration_v19", "done");
+}
+
+runMacroMigrationV19();
+
 const TARGETS = {
   gym:  { cal: 2500, p: 180, c: 270, f: 85 },
   rest: { cal: 2200, p: 180, c: 210, f: 75 },
@@ -1169,6 +1177,7 @@ const FOODS = [
   { cat: "Dirty", name: "Pizza — Slice", cal: 330, p: 13, c: 40, f: 13, unit: "serving", servingG: 120 },
   { cat: "Dirty", name: "Potato Chips", cal: 537, p: 7, c: 54, f: 34, unit: "g" },
   { cat: "Dirty", name: "Snack", cal: 465, p: 7.6, c: 56.5, f: 20.4, unit: "g" },
+  { cat: "Dirty", name: "Strongbow Dark Fruit (440ml can)", cal: 224, p: 0, c: 27.7, f: 0, unit: "serving", servingG: 440 },
   { cat: "Dirty", name: "Pie (Pub)", cal: 1110, p: 34, c: 105, f: 58, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "M&S Tortilla Chips", cal: 481, p: 5.5, c: 62.7, f: 21.9, unit: "g" },
   { cat: "Dirty", name: "Whisky", cal: 97, p: 0, c: 0, f: 0, unit: "serving", servingG: 44 },
