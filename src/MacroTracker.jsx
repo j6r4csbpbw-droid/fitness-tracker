@@ -1071,6 +1071,14 @@ function runMacroMigrationV19() {
 
 runMacroMigrationV19();
 
+function runMacroMigrationV20() {
+  if (localStorage.getItem("macro_migration_v20") === "done") return;
+  // New food item added — no historical entries to update
+  localStorage.setItem("macro_migration_v20", "done");
+}
+
+runMacroMigrationV20();
+
 const TARGETS = {
   gym:  { cal: 2500, p: 180, c: 270, f: 85 },
   rest: { cal: 2200, p: 180, c: 210, f: 75 },
@@ -1144,6 +1152,7 @@ const FOODS = [
   { cat: "Dairy", name: "Yogurt — Greek, 0% Fat", cal: 57, p: 10, c: 4, f: 0.3, unit: "g" },
   { cat: "Grains", name: "Bread — Sourdough", cal: 100, p: 4.7, c: 18.3, f: 0.63, unit: "serving", servingG: 45 },
   { cat: "Grains", name: "Bread — Wholemeal", cal: 81, p: 3.5, c: 14, f: 1.1, unit: "serving", servingG: 35 },
+  { cat: "Grains", name: "Couscous (per 60g dry)", cal: 226, p: 8, c: 46, f: 0.4, unit: "serving", servingG: 60 },
   { cat: "Grains", name: "Noodles", cal: 385, p: 13, c: 72, f: 6, unit: "g" },
   { cat: "Grains", name: "Pasta — Regular", cal: 371, p: 13, c: 75, f: 1.5, unit: "g" },
   { cat: "Grains", name: "Pasta — Wholemeal", cal: 348, p: 14, c: 68, f: 2.5, unit: "g" },
