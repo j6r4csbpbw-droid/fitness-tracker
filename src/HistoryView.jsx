@@ -304,6 +304,13 @@ function ThisMonthTab() {
   const dim = daysInMonthCount(year, month);
   const sortedDates = Object.keys(dayMap).sort((a, b) => b.localeCompare(a));
 
+  const n = sortedDates.length;
+  const avgCal = n > 0 ? sortedDates.reduce((s, ds) => s + (dayMap[ds].totals?.cal ?? 0), 0) / n : 0;
+  const avgP   = n > 0 ? sortedDates.reduce((s, ds) => s + (dayMap[ds].totals?.p   ?? 0), 0) / n : 0;
+  const avgC   = n > 0 ? sortedDates.reduce((s, ds) => s + (dayMap[ds].totals?.c   ?? 0), 0) / n : 0;
+  const avgF   = n > 0 ? sortedDates.reduce((s, ds) => s + (dayMap[ds].totals?.f   ?? 0), 0) / n : 0;
+  const avgCalCol = statusColor(avgCal, GYM_TARGETS.cal);
+
   function navigate(dir) {
     let m = month + dir, y = year;
     if (m < 0)  { m = 11; y--; }
@@ -343,6 +350,19 @@ function ThisMonthTab() {
 
       <TargetBlock label="TARGET (GYM)"  targets={GYM_TARGETS}  borderBottom="0.5px solid #d0d8e8" />
       <TargetBlock label="TARGET (REST)" targets={REST_TARGETS} borderBottom="2px solid #c7d7f0" />
+
+      {n > 0 && (
+        <div style={{ padding: "8px 12px", background: "#eef2f8", borderBottom: "1px solid #d8e2f0",
+          display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: "#4a6fa5", letterSpacing: 0.5, marginRight: 2 }}>
+            Avg · {n} entries
+          </span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: avgCalCol }}>{Math.round(avgCal)} kcal</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: MC.p }}>P {Math.round(avgP)}g</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: MC.c }}>C {Math.round(avgC)}g</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: MC.f }}>F {Math.round(avgF)}g</span>
+        </div>
+      )}
 
       {sortedDates.length === 0 ? (
         <div style={{ padding: "40px 16px", textAlign: "center", color: "#ccc", fontSize: 13 }}>
