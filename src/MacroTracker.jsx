@@ -1187,6 +1187,79 @@ function runMacroMigrationV21() {
 
 runMacroMigrationV21();
 
+function runMacroMigrationV22() {
+  if (localStorage.getItem("macro_migration_v22") === "done") return;
+
+  const OLD_CAL = 285;
+  const NEW_CAL = 230;
+
+  const TARGETS_LOCAL = {
+    gym:  { cal: 2500, p: 180, c: 270, f: 85 },
+    rest: { cal: 2200, p: 180, c: 210, f: 75 },
+  };
+
+  function recalcTotals(entries) {
+    return entries.reduce(
+      (acc, e) => ({
+        cal: acc.cal + (e.macros?.cal ?? 0),
+        p:   acc.p   + (e.macros?.p   ?? 0),
+        c:   acc.c   + (e.macros?.c   ?? 0),
+        f:   acc.f   + (e.macros?.f   ?? 0),
+      }),
+      { cal: 0, p: 0, c: 0, f: 0 }
+    );
+  }
+
+  function calcScore(totals, isGym) {
+    const t = isGym ? TARGETS_LOCAL.gym : TARGETS_LOCAL.rest;
+    const fatMax = isGym ? 85 : 75;
+    const fatMin = fatMax * 0.51;
+    const fatHit = totals.f >= fatMin && totals.f <= fatMax * 1.05;
+    return [
+      Math.abs(totals.cal / t.cal - 1) <= 0.05,
+      Math.abs(totals.p   / t.p   - 1) <= 0.05,
+      Math.abs(totals.c   / t.c   - 1) <= 0.05,
+      fatHit,
+    ].filter(Boolean).length;
+  }
+
+  for (const key of Object.keys(localStorage)) {
+    if (!key.startsWith("day_")) continue;
+    let day;
+    try { day = JSON.parse(localStorage.getItem(key)); } catch { continue; }
+    if (!day?.entries?.length) continue;
+
+    let changed = false;
+
+    for (const entry of day.entries) {
+      if (entry.food?.name !== "Beer — Light") continue;
+      entry.food.cal = NEW_CAL;
+      const qty = entry.qty ?? 1;
+      entry.macros = {
+        cal: Math.round(NEW_CAL * qty * 10) / 10,
+        p:   Math.round(2.5    * qty * 10) / 10,
+        c:   Math.round(20     * qty * 10) / 10,
+        f:   0,
+      };
+      changed = true;
+    }
+
+    if (changed) {
+      day.totals = recalcTotals(day.entries);
+      day.score  = calcScore(day.totals, day.isGym ?? false);
+      localStorage.setItem(key, JSON.stringify(day));
+    }
+  }
+
+  for (const key of Object.keys(localStorage)) {
+    if (key.startsWith("month_")) localStorage.removeItem(key);
+  }
+
+  localStorage.setItem("macro_migration_v22", "done");
+}
+
+runMacroMigrationV22();
+
 const TARGETS = {
   gym:  { cal: 2500, p: 180, c: 270, f: 85 },
   rest: { cal: 2200, p: 180, c: 210, f: 75 },
@@ -1283,7 +1356,7 @@ const FOODS = [
   { cat: "Meals", name: "Roast & Greens", cal: 620, p: 48, c: 38, f: 28, unit: "serving", servingG: 1 },
   { cat: "Meals", name: "Sandwich Sandwich", cal: 680, p: 38, c: 55, f: 27, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "Beer — Ale", cal: 196, p: 1.5, c: 15, f: 0, unit: "serving", servingG: 568 },
-  { cat: "Dirty", name: "Beer — Light", cal: 285, p: 2.5, c: 20, f: 0, unit: "serving", servingG: 568 },
+  { cat: "Dirty", name: "Beer — Light", cal: 230, p: 2.5, c: 20, f: 0, unit: "serving", servingG: 568 },
   { cat: "Dirty", name: "Beer — Stout", cal: 210, p: 2, c: 18, f: 0, unit: "serving", servingG: 568 },
   { cat: "Dirty", name: "Cheat Meal — Mild", cal: 1000, p: 30, c: 100, f: 48, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "Cheat Meal — Moderate", cal: 1500, p: 35, c: 145, f: 68, unit: "serving", servingG: 1 },
