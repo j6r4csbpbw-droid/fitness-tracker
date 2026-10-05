@@ -1403,6 +1403,10 @@ function getStatus(val, target) {
   return "over";
 }
 
+function getPStatus(val, tgt) {
+  return val >= tgt ? "hit" : getStatus(val, tgt);
+}
+
 function getFatStatus(fatVal, isGym) {
   const fatMax = isGym ? 85 : 75;
   const fatMin = fatMax * 0.51;
@@ -1596,7 +1600,9 @@ function SummaryCard({ totals, target, isGym, onReset, onEdit, onClearAll }) {
     { label: "Fat",      val: Math.round(totals.f),   tgt: target.f,   unit: "g",    dot: "#10b981" },
   ];
   const score = items.filter(({ label, val, tgt }) =>
-    label === "Fat" ? getFatStatus(val, isGym) === "hit" : getStatus(val, tgt) === "hit"
+    label === "Fat"     ? getFatStatus(val, isGym) === "hit" :
+    label === "Protein" ? getPStatus(val, tgt)     === "hit" :
+                          getStatus(val, tgt)       === "hit"
   ).length;
 
   return (
@@ -1613,7 +1619,9 @@ function SummaryCard({ totals, target, isGym, onReset, onEdit, onClearAll }) {
 
       <div style={{ background: "#fff", border: "1px solid #f0f0f0", borderTop: "none" }}>
         {items.map(({ label, val, tgt, unit, dot }, i) => {
-          const s = label === "Fat" ? getFatStatus(val, isGym) : getStatus(val, tgt);
+          const s = label === "Fat"     ? getFatStatus(val, isGym) :
+                    label === "Protein" ? getPStatus(val, tgt)     :
+                                          getStatus(val, tgt);
           const col = STATUS_COLOR[s];
           const pct = Math.min((val / tgt) * 100, 110);
           const diff = val - tgt;

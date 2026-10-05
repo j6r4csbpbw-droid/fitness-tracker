@@ -16,6 +16,15 @@ function getStatus(val, target) {
   return dev <= 0.10 ? "hit" : "over";
 }
 
+function getPStatus(val, tgt) {
+  return val >= tgt ? "hit" : getStatus(val, tgt);
+}
+
+function getPStatusColor(val, tgt) {
+  if (val >= tgt) return "#22c55e";
+  return statusColor(val, tgt);
+}
+
 function getFatStatus(fatVal, isGym) {
   const fatMax = isGym ? 85 : 75;
   const fatMin = fatMax * 0.51;
@@ -139,7 +148,7 @@ function TargetBlock({ label, targets, borderBottom }) {
 function DayRow({ dateStr, data, onEdit, onDelete }) {
   const { isGym, targets, totals } = data;
   const calColor = STATUS_COLOR[getStatus(totals.cal, targets.cal)];
-  const pColor   = STATUS_COLOR[getStatus(totals.p, targets.p)];
+  const pColor   = STATUS_COLOR[getPStatus(totals.p, targets.p)];
   const fColor   = STATUS_COLOR[getFatStatus(totals.f, isGym)];
   return (
     <div style={{ padding: "8px 12px", background: "#fff", borderBottom: "0.5px solid #f0f0f0" }}>
@@ -188,7 +197,7 @@ function EditDayModal({ dateStr, dayData, onSave, onClose }) {
 
   const tgt = isGym ? GYM_TARGETS : REST_TARGETS;
   const dCalColor = STATUS_COLOR[getStatus(totals.cal, tgt.cal)];
-  const dPColor   = STATUS_COLOR[getStatus(totals.p, tgt.p)];
+  const dPColor   = STATUS_COLOR[getPStatus(totals.p, tgt.p)];
   const dFColor   = STATUS_COLOR[getFatStatus(totals.f, isGym)];
   const liveScore = [
     getStatus(totals.cal, tgt.cal),
@@ -310,6 +319,7 @@ function ThisMonthTab() {
   const avgC   = n > 0 ? sortedDates.reduce((s, ds) => s + (dayMap[ds].totals?.c   ?? 0), 0) / n : 0;
   const avgF   = n > 0 ? sortedDates.reduce((s, ds) => s + (dayMap[ds].totals?.f   ?? 0), 0) / n : 0;
   const avgCalCol = statusColor(avgCal, GYM_TARGETS.cal);
+  const avgPCol   = getPStatusColor(avgP, GYM_TARGETS.p);
 
   function navigate(dir) {
     let m = month + dir, y = year;
@@ -358,7 +368,7 @@ function ThisMonthTab() {
             Avg · {n} entries
           </span>
           <span style={{ fontSize: 13, fontWeight: 700, color: avgCalCol }}>{Math.round(avgCal)} kcal</span>
-          <span style={{ fontSize: 12, fontWeight: 600, color: MC.p }}>P {Math.round(avgP)}g</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: avgPCol }}>P {Math.round(avgP)}g</span>
           <span style={{ fontSize: 12, fontWeight: 600, color: MC.c }}>C {Math.round(avgC)}g</span>
           <span style={{ fontSize: 12, fontWeight: 600, color: MC.f }}>F {Math.round(avgF)}g</span>
         </div>
