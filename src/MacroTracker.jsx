@@ -1260,6 +1260,14 @@ function runMacroMigrationV22() {
 
 runMacroMigrationV22();
 
+function runMacroMigrationV23() {
+  if (localStorage.getItem("macro_migration_v23") === "done") return;
+  // New food item added — no historical entries to update
+  localStorage.setItem("macro_migration_v23", "done");
+}
+
+runMacroMigrationV23();
+
 const TARGETS = {
   gym:  { cal: 2500, p: 180, c: 270, f: 85 },
   rest: { cal: 2200, p: 180, c: 210, f: 75 },
@@ -1363,6 +1371,7 @@ const FOODS = [
   { cat: "Dirty", name: "Cheat Meal — Nuclear", cal: 2000, p: 40, c: 195, f: 95, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "Cider", cal: 224, p: 0, c: 27.7, f: 0, unit: "serving", servingG: 440 },
   { cat: "Dirty", name: "Dark Chocolate", cal: 598, p: 7, c: 20, f: 50, unit: "g" },
+  { cat: "Dirty", name: "Dessert", cal: 285, p: 5, c: 32.5, f: 15, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "Double Beef Burger", cal: 720, p: 42, c: 38, f: 44, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "Fish & Chips", cal: 1240, p: 58, c: 128, f: 52, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "Fried Chicken", cal: 320, p: 28, c: 8, f: 19, unit: "serving", servingG: 150 },
