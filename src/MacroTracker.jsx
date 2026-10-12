@@ -1276,6 +1276,120 @@ function runMacroMigrationV24() {
 
 runMacroMigrationV24();
 
+function runMacroMigrationV25() {
+  if (localStorage.getItem("macro_migration_v25") === "done") return;
+
+  const TARGETS_LOCAL = {
+    gym:  { cal: 2500, p: 180, c: 270, f: 85 },
+    rest: { cal: 2200, p: 180, c: 210, f: 75 },
+  };
+
+  // New macros (per-serving for Fried Chicken, per-100g for Prawns)
+  const FRIED_CHICKEN = { cal: 435, p: 33, c: 18, f: 26 };
+  const PRAWNS        = { cal: 85,  p: 18, c: 0,  f: 1  };
+
+  // Renames (old → new name)
+  const RENAMES = {
+    "Chicken - Breaded (M&S)": "Chicken — Breaded (M&S)",
+    "Butter - Unsalted":       "Butter — Unsalted",
+    "Peanut Butter - Natural": "Peanut Butter — Natural",
+  };
+
+  function recalcTotals(entries) {
+    return entries.reduce(
+      (acc, e) => ({
+        cal: acc.cal + (e.macros?.cal ?? 0),
+        p:   acc.p   + (e.macros?.p   ?? 0),
+        c:   acc.c   + (e.macros?.c   ?? 0),
+        f:   acc.f   + (e.macros?.f   ?? 0),
+      }),
+      { cal: 0, p: 0, c: 0, f: 0 }
+    );
+  }
+
+  function calcScore(totals, isGym) {
+    const t = isGym ? TARGETS_LOCAL.gym : TARGETS_LOCAL.rest;
+    const fatMax = isGym ? 85 : 75;
+    const fatMin = fatMax * 0.51;
+    const fatHit = totals.f >= fatMin && totals.f <= fatMax * 1.05;
+    return [
+      Math.abs(totals.cal / t.cal - 1) <= 0.05,
+      Math.abs(totals.p   / t.p   - 1) <= 0.05,
+      Math.abs(totals.c   / t.c   - 1) <= 0.05,
+      fatHit,
+    ].filter(Boolean).length;
+  }
+
+  let totalEntries = 0;
+  let totalDays    = 0;
+
+  for (const key of Object.keys(localStorage)) {
+    if (!key.startsWith("day_")) continue;
+    let day;
+    try { day = JSON.parse(localStorage.getItem(key)); } catch { continue; }
+    if (!day?.entries?.length) continue;
+
+    let changed = false;
+
+    for (const entry of day.entries) {
+      const name = entry.food?.name;
+      if (!name) continue;
+
+      // Rename entries
+      if (RENAMES[name]) {
+        entry.food.name = RENAMES[name];
+        changed = true;
+        totalEntries++;
+      }
+
+      // Fried Chicken — serving-based, recalculate macros
+      if (name === "Fried Chicken") {
+        const qty = entry.qty ?? 1;
+        Object.assign(entry.food, FRIED_CHICKEN);
+        entry.macros = {
+          cal: Math.round(FRIED_CHICKEN.cal * qty * 10) / 10,
+          p:   Math.round(FRIED_CHICKEN.p   * qty * 10) / 10,
+          c:   Math.round(FRIED_CHICKEN.c   * qty * 10) / 10,
+          f:   Math.round(FRIED_CHICKEN.f   * qty * 10) / 10,
+        };
+        changed = true;
+        totalEntries++;
+      }
+
+      // Prawns — per-100g, recalculate macros
+      if (name === "Prawns") {
+        const qty = entry.qty ?? 0;
+        Object.assign(entry.food, PRAWNS);
+        entry.macros = {
+          cal: Math.round(PRAWNS.cal * qty / 100 * 10) / 10,
+          p:   Math.round(PRAWNS.p   * qty / 100 * 10) / 10,
+          c:   Math.round(PRAWNS.c   * qty / 100 * 10) / 10,
+          f:   Math.round(PRAWNS.f   * qty / 100 * 10) / 10,
+        };
+        changed = true;
+        totalEntries++;
+      }
+    }
+
+    if (changed) {
+      day.totals = recalcTotals(day.entries);
+      day.score  = calcScore(day.totals, day.isGym ?? false);
+      localStorage.setItem(key, JSON.stringify(day));
+      totalDays++;
+    }
+  }
+
+  // Invalidate monthly summaries for any changed months
+  for (const key of Object.keys(localStorage)) {
+    if (key.startsWith("month_")) localStorage.removeItem(key);
+  }
+
+  console.log(`Migration v25: ${totalEntries} entries updated across ${totalDays} days`);
+  localStorage.setItem("macro_migration_v25", "done");
+}
+
+runMacroMigrationV25();
+
 const TARGETS = {
   gym:  { cal: 2500, p: 180, c: 270, f: 85 },
   rest: { cal: 2200, p: 180, c: 210, f: 75 },
@@ -1284,7 +1398,7 @@ const TARGETS = {
 const FOODS = [
   { cat: "Meat", name: "Beef Mince — 20%", cal: 196, p: 17, c: 0, f: 14, unit: "g" },
   { cat: "Meat", name: "Beef Mince — 5%", cal: 128, p: 20, c: 0, f: 5, unit: "g" },
-  { cat: "Meat", name: "Chicken - Breaded (M&S)", cal: 181, p: 14.7, c: 10.8, f: 8.4, unit: "g" },
+  { cat: "Meat", name: "Chicken — Breaded (M&S)", cal: 181, p: 14.7, c: 10.8, f: 8.4, unit: "g" },
   { cat: "Meat", name: "Chicken Breast — Skinless", cal: 120, p: 23, c: 0, f: 2, unit: "g" },
   { cat: "Meat", name: "Chicken Drumstick — Skin-On", cal: 175, p: 19.8, c: 0, f: 10.5, unit: "g" },
   { cat: "Meat", name: "Chicken Drumstick — Skinless", cal: 91, p: 18, c: 0, f: 2.8, unit: "g" },
@@ -1308,7 +1422,7 @@ const FOODS = [
   { cat: "Seafood", name: "Cod — Breaded", cal: 197, p: 14, c: 14, f: 9, unit: "g" },
   { cat: "Seafood", name: "Haddock", cal: 87, p: 19, c: 0, f: 0.8, unit: "g" },
   { cat: "Seafood", name: "Mackerel", cal: 205, p: 19, c: 0, f: 14, unit: "g" },
-  { cat: "Seafood", name: "Prawns", cal: 71, p: 14, c: 0, f: 1, unit: "g" },
+  { cat: "Seafood", name: "Prawns", cal: 85, p: 18, c: 0, f: 1, unit: "g" },
   { cat: "Seafood", name: "Salmon", cal: 175, p: 20, c: 0, f: 11, unit: "g" },
   { cat: "Seafood", name: "Sardines", cal: 185, p: 22, c: 0, f: 11, unit: "g" },
   { cat: "Seafood", name: "Sea Bass", cal: 93, p: 18, c: 0, f: 2, unit: "g" },
@@ -1321,7 +1435,7 @@ const FOODS = [
   { cat: "Produce", name: "Blackberries", cal: 43, p: 1.4, c: 10, f: 0.5, unit: "g" },
   { cat: "Produce", name: "Blueberries", cal: 57, p: 0.7, c: 14, f: 0.3, unit: "g" },
   { cat: "Produce", name: "Broccoli", cal: 34, p: 2.8, c: 7, f: 0.4, unit: "g" },
-  { cat: "Produce", name: "Butter - Unsalted", cal: 100, p: 0.1, c: 0, f: 11.4, unit: "serving", servingG: 14 },
+  { cat: "Produce", name: "Butter — Unsalted", cal: 100, p: 0.1, c: 0, f: 11.4, unit: "serving", servingG: 14 },
   { cat: "Produce", name: "Carrots", cal: 33, p: 0.7, c: 7.7, f: 0.2, unit: "serving", servingG: 80 },
   { cat: "Produce", name: "Cauliflower", cal: 25, p: 1.9, c: 5, f: 0.3, unit: "g" },
   { cat: "Produce", name: "Chickpeas", cal: 139, p: 8, c: 23, f: 2.6, unit: "g" },
@@ -1349,7 +1463,7 @@ const FOODS = [
   { cat: "Dairy", name: "Cheese — Pecorino Romano", cal: 19, p: 1.6, c: 0, f: 1.3, unit: "serving", servingG: 5 },
   { cat: "Dairy", name: "Cottage Cheese", cal: 12, p: 2, c: 0.5, f: 0.2, unit: "serving", servingG: 15 },
   { cat: "Dairy", name: "Egg", cal: 93, p: 7.8, c: 0.7, f: 6.6, unit: "serving", servingG: 60 },
-  { cat: "Dairy", name: "Honey", cal: 46, p: 0, c: 12, f: 0, unit: "serving", servingG: 15 },
+  { cat: "Condiments", name: "Honey", cal: 46, p: 0, c: 12, f: 0, unit: "serving", servingG: 15 },
   { cat: "Dairy", name: "Milk — Skimmed", cal: 35, p: 3.4, c: 5, f: 0.1, unit: "g" },
   { cat: "Dairy", name: "Soy Milk — Unsweetened", cal: 33, p: 3.3, c: 1.8, f: 1.8, unit: "g" },
   { cat: "Dairy", name: "Yogurt — Greek, 0% Fat", cal: 57, p: 10, c: 4, f: 0.3, unit: "g" },
@@ -1370,7 +1484,7 @@ const FOODS = [
   { cat: "Condiments", name: "Hot Sauce", cal: 2, p: 0.1, c: 0.2, f: 0.1, unit: "serving", servingG: 15 },
   { cat: "Condiments", name: "Nando's Marinade", cal: 14, p: 0.2, c: 2.7, f: 0.2, unit: "serving", servingG: 15 },
   { cat: "Condiments", name: "Olive Oil", cal: 119, p: 0, c: 0, f: 13.5, unit: "serving", servingG: 15 },
-  { cat: "Condiments", name: "Peanut Butter - Natural", cal: 96, p: 4, c: 3.2, f: 8, unit: "serving", servingG: 16 },
+  { cat: "Condiments", name: "Peanut Butter — Natural", cal: 96, p: 4, c: 3.2, f: 8, unit: "serving", servingG: 16 },
   { cat: "Condiments", name: "Sesame Oil", cal: 119, p: 0, c: 0, f: 13.5, unit: "serving", servingG: 15 },
   { cat: "Condiments", name: "Soy Sauce —Light", cal: 8, p: 1.2, c: 0.8, f: 0, unit: "serving", servingG: 15 },
   { cat: "Meals", name: "Assenheim's", cal: 850, p: 65, c: 72, f: 28, unit: "serving", servingG: 1 },
@@ -1393,7 +1507,7 @@ const FOODS = [
   { cat: "Dirty", name: "Dessert", cal: 285, p: 5, c: 32.5, f: 15, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "Double Beef Burger", cal: 720, p: 42, c: 38, f: 44, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "Fish & Chips", cal: 1240, p: 58, c: 128, f: 52, unit: "serving", servingG: 1 },
-  { cat: "Dirty", name: "Fried Chicken", cal: 320, p: 28, c: 8, f: 19, unit: "serving", servingG: 150 },
+  { cat: "Dirty", name: "Fried Chicken", cal: 435, p: 33, c: 18, f: 26, unit: "serving", servingG: 150 },
   { cat: "Dirty", name: "Fries", cal: 530, p: 6, c: 68, f: 26, unit: "serving", servingG: 200 },
   { cat: "Dirty", name: "Gin", cal: 97, p: 0, c: 0, f: 0, unit: "serving", servingG: 44 },
   { cat: "Dirty", name: "Guinness 0.0", cal: 75, p: 1.3, c: 16.7, f: 0, unit: "serving", servingG: 440 },
