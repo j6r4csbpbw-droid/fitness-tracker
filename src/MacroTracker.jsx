@@ -1268,6 +1268,14 @@ function runMacroMigrationV23() {
 
 runMacroMigrationV23();
 
+function runMacroMigrationV24() {
+  if (localStorage.getItem("macro_migration_v24") === "done") return;
+  // New food items added — no historical entries to update
+  localStorage.setItem("macro_migration_v24", "done");
+}
+
+runMacroMigrationV24();
+
 const TARGETS = {
   gym:  { cal: 2500, p: 180, c: 270, f: 85 },
   rest: { cal: 2200, p: 180, c: 210, f: 75 },
@@ -1291,14 +1299,19 @@ const FOODS = [
   { cat: "Meat", name: "Pork Loin", cal: 133, p: 25, c: 0, f: 3.5, unit: "g" },
   { cat: "Meat", name: "Pork Mince — 5%", cal: 122, p: 21, c: 0, f: 4, unit: "g" },
   { cat: "Meat", name: "Pork Sausages", cal: 268, p: 14, c: 8, f: 21, unit: "g" },
+  { cat: "Meat", name: "Rump Steak", cal: 166, p: 26, c: 0, f: 6.5, unit: "g" },
+  { cat: "Meat", name: "Sirloin Steak", cal: 193, p: 25, c: 0, f: 10, unit: "g" },
   { cat: "Meat", name: "Steak — Regular", cal: 170, p: 26, c: 0, f: 7, unit: "g" },
   { cat: "Meat", name: "Steak — Ribeye", cal: 291, p: 22, c: 0, f: 22, unit: "g" },
   { cat: "Meat", name: "Turkey Mince — 5%", cal: 120, p: 21, c: 0, f: 4, unit: "g" },
+  { cat: "Seafood", name: "Cod", cal: 83, p: 18, c: 0, f: 0.9, unit: "g" },
   { cat: "Seafood", name: "Cod — Breaded", cal: 197, p: 14, c: 14, f: 9, unit: "g" },
+  { cat: "Seafood", name: "Haddock", cal: 87, p: 19, c: 0, f: 0.8, unit: "g" },
   { cat: "Seafood", name: "Mackerel", cal: 205, p: 19, c: 0, f: 14, unit: "g" },
   { cat: "Seafood", name: "Prawns", cal: 71, p: 14, c: 0, f: 1, unit: "g" },
   { cat: "Seafood", name: "Salmon", cal: 175, p: 20, c: 0, f: 11, unit: "g" },
   { cat: "Seafood", name: "Sardines", cal: 185, p: 22, c: 0, f: 11, unit: "g" },
+  { cat: "Seafood", name: "Sea Bass", cal: 93, p: 18, c: 0, f: 2, unit: "g" },
   { cat: "Seafood", name: "Trout", cal: 155, p: 22, c: 0, f: 7, unit: "g" },
   { cat: "Seafood", name: "Tuna", cal: 116, p: 25, c: 0, f: 0.8, unit: "g" },
   { cat: "Seafood", name: "White Fish", cal: 86, p: 18, c: 0, f: 1.2, unit: "g" },
@@ -1329,6 +1342,7 @@ const FOODS = [
   { cat: "Produce", name: "Sweet Potato", cal: 86, p: 1.6, c: 20, f: 0.1, unit: "g" },
   { cat: "Produce", name: "Tofu", cal: 66, p: 6.5, c: 2, f: 3.5, unit: "g" },
   { cat: "Produce", name: "Tomatoes", cal: 18, p: 0.9, c: 3.5, f: 0.2, unit: "g" },
+  { cat: "Produce", name: "Tomatoes — Canned", cal: 16, p: 1, c: 3, f: 0.2, unit: "g" },
   { cat: "Dairy", name: "Cheese — Cheddar", cal: 28, p: 1.8, c: 0, f: 2.4, unit: "serving", servingG: 7 },
   { cat: "Dairy", name: "Cheese — Mozzarella", cal: 20, p: 2, c: 0.2, f: 1.2, unit: "serving", servingG: 7 },
   { cat: "Dairy", name: "Cheese — Parmigiano Reggiano", cal: 22, p: 1.9, c: 0, f: 1.5, unit: "serving", servingG: 5 },
@@ -1353,7 +1367,11 @@ const FOODS = [
   { cat: "Grains", name: "Rye Cracker", cal: 37, p: 1, c: 7, f: 0.3, unit: "serving", servingG: 10 },
   { cat: "Grains", name: "Tortilla Wrap", cal: 122, p: 3.7, c: 21.7, f: 2.1, unit: "serving", servingG: 41 },
   { cat: "Grains", name: "Whey Protein", cal: 104, p: 22, c: 2, f: 1.5, unit: "serving", servingG: 1 },
+  { cat: "Condiments", name: "Hot Sauce", cal: 2, p: 0.1, c: 0.2, f: 0.1, unit: "serving", servingG: 15 },
+  { cat: "Condiments", name: "Nando's Marinade", cal: 14, p: 0.2, c: 2.7, f: 0.2, unit: "serving", servingG: 15 },
+  { cat: "Condiments", name: "Olive Oil", cal: 119, p: 0, c: 0, f: 13.5, unit: "serving", servingG: 15 },
   { cat: "Condiments", name: "Peanut Butter - Natural", cal: 96, p: 4, c: 3.2, f: 8, unit: "serving", servingG: 16 },
+  { cat: "Condiments", name: "Sesame Oil", cal: 119, p: 0, c: 0, f: 13.5, unit: "serving", servingG: 15 },
   { cat: "Condiments", name: "Soy Sauce —Light", cal: 8, p: 1.2, c: 0.8, f: 0, unit: "serving", servingG: 15 },
   { cat: "Meals", name: "Assenheim's", cal: 850, p: 65, c: 72, f: 28, unit: "serving", servingG: 1 },
   { cat: "Meals", name: "Breakfast Bap", cal: 500, p: 25, c: 28, f: 32, unit: "serving", servingG: 1 },
@@ -1361,6 +1379,7 @@ const FOODS = [
   { cat: "Meals", name: "Mediterranean Chicken Rice Box", cal: 700, p: 45, c: 70, f: 25, unit: "serving", servingG: 1 },
   { cat: "Meals", name: "Mediterranean Chicken Wrap", cal: 670, p: 50, c: 44, f: 33, unit: "serving", servingG: 1 },
   { cat: "Meals", name: "Nando's", cal: 949, p: 85, c: 55, f: 44, unit: "serving", servingG: 1 },
+  { cat: "Meals", name: "Pizza Union — Whole Pizza", cal: 1000, p: 62.1, c: 105, f: 37.8, unit: "serving", servingG: 1 },
   { cat: "Meals", name: "Roast & Greens", cal: 620, p: 48, c: 38, f: 28, unit: "serving", servingG: 1 },
   { cat: "Meals", name: "Sandwich Sandwich", cal: 680, p: 38, c: 55, f: 27, unit: "serving", servingG: 1 },
   { cat: "Dirty", name: "Beer — Ale", cal: 196, p: 1.5, c: 15, f: 0, unit: "serving", servingG: 568 },
